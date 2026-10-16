@@ -270,7 +270,7 @@ function Overview() {
             <br className="desktop-break" /> и превратить в проверяемую
             статистику.
           </p>
-          <a className="button lime" href="#scenarios">
+          <a className="button brand" href="#scenarios">
             Разобрать сценарии <ArrowRight size={17} />
           </a>
           <a className="hero-secondary" href="#roadmap">
@@ -438,7 +438,7 @@ function Overview() {
           </a>
           <a href="#scenarios/java" className="pilot-card">
             <div className="pilot-heading">
-              <span className="pilot-symbol peach">
+              <span className="pilot-symbol rose">
                 <FileCode2 size={24} />
               </span>
               <Pill>GROUP-BASED</Pill>
@@ -716,7 +716,7 @@ function Scenarios({ detail }: { detail: string }) {
       <section className="scenario-summary">
         <div>
           <div className="inline-tags">
-            <Pill tone="green">{s.tag}</Pill>
+            <Pill tone="info">{s.tag}</Pill>
             {s.sources.map((src) => (
               <Pill key={src}>{src}</Pill>
             ))}
@@ -795,7 +795,7 @@ function Scenarios({ detail }: { detail: string }) {
                 : "Знаменатель имеет значение"
           }
         >
-          <Pill tone="orange">DEMO · синтетические данные</Pill>
+          <Pill tone="attention">DEMO · синтетические данные</Pill>
         </SectionHeading>
         {s.id === "ai" ? (
           <VersionDemo />
@@ -1041,7 +1041,7 @@ function VersionDemo() {
             студента.
           </p>
         </div>
-        <Pill tone="green">
+        <Pill tone="info">
           <LockKeyhole size={13} /> Закреплено v{locked}
         </Pill>
       </div>
@@ -1108,7 +1108,7 @@ function VersionDemo() {
         <div className="migration-preview">
           <div className="migration-header">
             <div>
-              <Pill tone="orange">DRY RUN · только расчёт</Pill>
+              <Pill tone="attention">DRY RUN · только расчёт</Pill>
               <h3>План R1 → проект R2 на v{current}</h3>
             </div>
             <span>Равные веса задач</span>
@@ -1162,7 +1162,7 @@ function VersionDemo() {
                       <small>{t.id}</small>
                     </td>
                     <td>
-                      <Pill tone={t.action === "CARRY_OVER" ? "green" : ""}>
+                      <Pill tone={t.action === "CARRY_OVER" ? "info" : ""}>
                         {t.action}
                       </Pill>
                     </td>
@@ -1200,7 +1200,7 @@ function ReconciliationDemo() {
             Путь файла подсказывает связь, но не доказывает качество работы.
           </p>
         </div>
-        <Pill tone={accepted.length ? "green" : "orange"}>
+        <Pill tone={accepted.length ? "info" : "attention"}>
           {accepted.length ? "Есть принятые результаты" : "Нужна проверка"}
         </Pill>
       </div>
@@ -1383,7 +1383,7 @@ function Roadmap() {
         </div>
         <article className="stage-detail" aria-live="polite">
           <div className="stage-detail-top">
-            <Pill tone="green">
+            <Pill tone="info">
               Этап {stage.id} · {stage.kind}
             </Pill>
             <div className="effort">
@@ -1505,10 +1505,10 @@ function Decisions({ detail }: { detail: string }) {
               <Pill
                 tone={
                   state === "Принцип проекта"
-                    ? "green"
+                    ? "info"
                     : state === "Предложение"
                       ? ""
-                      : "orange"
+                      : "attention"
                 }
               >
                 {state}

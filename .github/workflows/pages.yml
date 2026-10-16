@@ -1,5 +1,7 @@
-name: Publish site
+name: Build and publish site
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -45,3 +47,14 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Show published website
+        env:
+          SITE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          {
+            echo '## Сайт опубліковано'
+            echo
+            echo "[Відкрити всю концепцію архітектури](${SITE_URL})"
+            echo
+            echo 'Архітектура, словник термінів, сценарії та лінійка MVP доступні за одним посиланням. Додатковий запуск не потрібен.'
+          } >> "$GITHUB_STEP_SUMMARY"
