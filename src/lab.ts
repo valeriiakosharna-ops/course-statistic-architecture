@@ -17,26 +17,33 @@ export const modes: {
     id: "java",
     label: "Java Dual",
     short: "Группа + код",
-    sources: ["Moodle", "GitLab: работы", "Sheets"],
+    sources: [
+      "Moodle",
+      "GitLab: материалы",
+      "GitLab: работы",
+      "Sheets",
+      "Discord",
+    ],
     groups: true,
   },
   {
     id: "moodle",
     label: "Курс в Moodle",
     short: "Тесты и задания",
-    sources: ["Moodle"],
+    sources: ["Moodle", "GitLab: материалы"],
     groups: true,
   },
   {
     id: "sheets",
     label: "Moodle + таблица",
     short: "Разные назначения",
-    sources: ["Moodle", "Sheets"],
+    sources: ["Moodle", "GitLab: материалы", "Sheets", "Discord"],
     groups: true,
   },
 ];
 export type TaskStatus = "accepted" | "review" | "todo" | "unknown";
 export type StudentTask = {
+  kind?: "Теория" | "Практика" | "Тест";
   id: string;
   required: boolean;
   weight: number;
@@ -86,7 +93,7 @@ export function learnersFor(mode: CourseMode): Learner[] {
       id: `S-${i + 1}`,
       name,
       group,
-      version: i < 4 ? 1 : 2,
+      version: i < 4 ? 1 : 3,
       tasks: Array.from({ length: total + 2 }, (_, j) => {
         const status: TaskStatus =
           j < accepted
@@ -99,7 +106,18 @@ export function learnersFor(mode: CourseMode): Learner[] {
         const submitted = status === "accepted" || status === "review";
         const source = mode === "java" && j % 2 === 0 ? "GitLab" : "Moodle";
         return {
-          id: `TASK-${String(j + 1).padStart(2, "0")}`,
+          id:
+            i >= 4 && j === 4
+              ? "NEW-01"
+              : `TASK-${String(j + 1).padStart(2, "0")}`,
+          kind:
+            source === "GitLab"
+              ? "Практика"
+              : j % 3 === 0
+                ? "Теория"
+                : j % 3 === 1
+                  ? "Тест"
+                  : "Практика",
           required: j < total,
           weight: 1,
           status,
@@ -168,7 +186,7 @@ export function metrics(learners: Learner[], asOf = AS_OF) {
   };
 }
 export type Packet = {
-  source: "Moodle" | "GitLab" | "Sheets";
+  source: "Moodle" | "GitLab" | "Sheets" | "GitLab: материалы" | "Discord";
   instance: string;
   type: string;
   externalId: string;
@@ -213,6 +231,41 @@ export const packets: Packet[] = [
     value: null,
   },
 ];
+packets.push(
+  {
+    source: "GitLab: материалы",
+    instance: "course-7",
+    type: "course_release",
+    externalId: "course-v3",
+    revision: "manifest-sha-3",
+    eventTime: "2026-10-16T07:00:00Z",
+    learner: null,
+    task: null,
+    value: null,
+  },
+  {
+    source: "Discord",
+    instance: "guild-7/channel-A",
+    type: "deadline_clarification",
+    externalId: "message-105",
+    revision: "edited-1",
+    eventTime: "2026-10-16T11:00:00Z",
+    learner: null,
+    task: "TASK-01",
+    value: null,
+  },
+  {
+    source: "Sheets",
+    instance: "sheet-demo/grades",
+    type: "grade_row",
+    externalId: "grade-12",
+    revision: "grade-hash-1",
+    eventTime: "2026-10-16T08:30:00Z",
+    learner: "S-1",
+    task: "TASK-01",
+    value: 9,
+  },
+);
 export const packetKey = (p: Packet) =>
   `${p.source}/${p.instance}/${p.type}/${p.externalId}`;
 export type Intake = { facts: Packet[]; duplicates: number };
@@ -225,9 +278,11 @@ export function ingest(state: Intake, packet: Packet): Intake {
     : { ...state, facts: [...state.facts, { ...packet }] };
 }
 export function routePacket(p: Packet) {
-  if (p.source === "Sheets") return "plan-proposal";
+  if (p.type === "course_release") return "course-config";
+  if (p.source === "Discord") return "clarification-proposal";
+  if (p.source === "Sheets" && p.type === "plan_row") return "plan-proposal";
   if (!p.learner || !p.task) return "review-queue";
-  return "evidence";
+  return p.type === "grade_row" ? "grade-candidate" : "evidence";
 }
 export function sortFacts(facts: Packet[]) {
   return [...facts].sort(

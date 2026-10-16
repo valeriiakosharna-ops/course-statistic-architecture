@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { CourseMode } from "../lab";
-import { modes } from "../lab";
+import { systems, type SystemId } from "../platform";
 import {
   Block,
   Flow,
@@ -8,264 +8,242 @@ import {
   Heading,
   Hint,
   Section,
+  type GraphEdge,
 } from "../components/Diagram";
-import type { GraphNode } from "../components/Diagram";
-
-const details: Record<string, [string, string, string]> = {
-  moodle: [
-    "Moodle · обучение",
-    "Курс, аккаунты, тесты, gradebook, попытки.",
-    "Права чтения + проверка доступных API и плагинов.",
-  ],
-  content: [
-    "GitLab · материалы",
-    "AsciiDoc, HTML-исходники, commit SHA, CI-сборка.",
-    "Исходники собираются в неизменяемый HTML-артефакт.",
-  ],
-  work: [
-    "GitLab · работы",
-    "Репозиторий студента, MR, diff, review.",
-    "API + submitted URL из Moodle; merge не означает зачёт.",
-  ],
-  sheets: [
-    "Sheets · проект плана",
-    "task_id, группа, обязательность, вес, срок, часовой пояс.",
-    "Импорт создаёт предложение. Преподаватель утверждает новую ревизию.",
-  ],
-  collector: [
-    "Коннекторы · чтение",
-    "Moodle / GitLab / Sheets → JSON; CSV — ручной импорт.",
-    "Плановое чтение 1–2 раза в сутки. Webhook только ускоряет сверку.",
-  ],
-  registry: [
-    "Наш реестр · учебный смысл",
-    "ID-связи, каталог задач, версии, планы, результаты.",
-    "Именно здесь фиксируется, что должен выполнить каждый студент.",
-  ],
-  stats: [
-    "Аналитика · вычисления",
-    "Формула + свой план + принятые результаты.",
-    "Снимок с датой и ссылками на исходные подтверждения.",
-  ],
-  storage: [
-    "Хранилище контента",
-    "HTML + ресурсы + версия + SHA-256.",
-    "Хеш подтверждает неизменность. Доступ приватного контента проверяется отдельно.",
-  ],
-  plugin: [
-    "Moodle · плагин запуска",
-    "Проверенная Moodle-сессия → резолвер → точный HTML.",
-    "Нужна отдельная доработка для доставки разных версий одному курсу.",
-  ],
-};
+const optional = (mode: CourseMode, id: SystemId) =>
+  id === "work"
+    ? mode !== "java"
+    : id === "sheets" || id === "discord"
+      ? mode !== "java" && mode !== "sheets"
+      : false;
 export default function Ecosystems({ mode }: { mode: CourseMode }) {
-  const [selected, setSelected] = useState("registry");
-  const hasContent = mode === "ai",
-    hasWork = mode === "java",
-    hasSheet = mode === "java" || mode === "sheets";
-  const nodes: GraphNode[] = [
-    {
-      id: "moodle",
-      x: 35,
-      y: 80,
-      w: 205,
-      title: "Moodle",
-      sub: "студенты · оценки · тесты",
-      tone: "blue",
-    },
-    {
-      id: "content",
-      x: 35,
-      y: 190,
-      w: 205,
-      title: "GitLab · материалы",
-      sub: hasContent ? "AsciiDoc → CI → HTML" : "не нужен этому сценарию",
-      inactive: !hasContent,
-    },
-    {
-      id: "work",
-      x: 35,
-      y: 300,
-      w: 205,
-      title: "GitLab · работы",
-      sub: hasWork ? "MR · файлы · review" : "не нужен этому сценарию",
-      inactive: !hasWork,
-    },
-    {
-      id: "sheets",
-      x: 35,
-      y: 410,
-      w: 205,
-      title: "Google Sheets",
-      sub: hasSheet ? "задачи · группы · сроки" : "не нужен этому сценарию",
-      inactive: !hasSheet,
-    },
-    {
-      id: "collector",
-      x: 355,
-      y: 300,
-      w: 205,
-      title: "Коннекторы",
-      sub: "только чтение источников",
-      tone: "blue",
-    },
-    {
-      id: "registry",
-      x: 655,
-      y: 300,
-      w: 195,
-      title: "Учебный реестр",
-      sub: "связи · планы · результаты",
-      tone: "dark",
-    },
-    {
-      id: "stats",
-      x: 655,
-      y: 450,
-      w: 195,
-      title: "Статистика",
-      sub: "студент / группа",
-      tone: "red",
-    },
-    {
-      id: "storage",
-      x: 355,
-      y: 85,
-      w: 205,
-      title: "Версионный HTML",
-      sub: "артефакт + хеш",
-      inactive: !hasContent,
-    },
-    {
-      id: "plugin",
-      x: 655,
-      y: 85,
-      w: 195,
-      title: "Moodle · запуск",
-      sub: hasContent ? "свой артефакт по плану" : "обычные активности",
-      tone: "blue",
-    },
-  ];
-  const edges = [
-    { from: "moodle", to: "collector", label: "API: результаты" },
-    ...(hasWork
-      ? [{ from: "work", to: "collector", label: "API: MR / review" }]
-      : []),
-    ...(hasSheet
-      ? [{ from: "sheets", to: "collector", label: "API / CSV: план" }]
-      : []),
-    ...(hasContent
+  const [selected, setSelected] = useState<SystemId>("db"),
+    [layer, setLayer] = useState("facts");
+  const system = systems.find((s) => s.id === selected)!;
+  const edges: GraphEdge[] =
+    layer === "facts"
       ? [
-          { from: "content", to: "storage", label: "CI: сборка" },
-          { from: "storage", to: "plugin", label: "точный артефакт" },
-          {
-            from: "registry",
-            to: "plugin",
-            label: "закреплённая версия",
-            dashed: true,
-          },
+          ...(
+            ["materials", "moodle", "work", "sheets", "discord"] as SystemId[]
+          ).map((id) => ({
+            from: id,
+            to: "db",
+            label:
+              id === "materials"
+                ? "версии + манифест"
+                : id === "sheets"
+                  ? "трек / срок / оценка"
+                  : id === "discord"
+                    ? "уточнение + автор"
+                    : id === "work"
+                      ? "код / MR / review"
+                      : "попытки / завершения",
+            dashed: optional(mode, id),
+          })),
+          { from: "db", to: "atlas", label: "карточки и метрики" },
         ]
-      : []),
-    { from: "collector", to: "registry", label: "сохранить и связать" },
-    { from: "registry", to: "stats", label: "рассчитать" },
-  ];
-  const info = details[selected];
+      : layer === "versions"
+        ? [
+            { from: "atlas", to: "db", label: "решение о переходе" },
+            { from: "db", to: "materials", label: "копия закреплений" },
+            { from: "db", to: "moodle", label: "версия студента" },
+          ]
+        : [
+            { from: "sheets", to: "db", label: "назначения группы" },
+            { from: "discord", to: "db", label: "кандидат уточнения" },
+            { from: "atlas", to: "db", label: "утвердить / правило" },
+            { from: "db", to: "moodle", label: "личный трек" },
+          ];
   return (
     <>
       <Heading
-        kicker="02 / КАРТА ЭКОСИСТЕМ"
-        title="Что где живёт и кто с кем связан"
-        sub={`Выбран ${modes.find((m) => m.id === mode)?.label}. Пунктирные блоки не нужны этому сценарию.`}
+        kicker="02 / РОВНО СЕМЬ СИСТЕМ"
+        title="У каждой системы — своя роль"
+        sub="Пять источников → одна карточка в БД → LearningAtlas. Переключайте слой и нажимайте на блоки."
       />
+      <div className="tabs" aria-label="Слой архитектуры">
+        {[
+          ["facts", "Сбор статистики"],
+          ["versions", "Смена версии"],
+          ["tracks", "Назначение трека"],
+        ].map(([id, label]) => (
+          <button
+            key={id}
+            className={layer === id ? "selected" : ""}
+            aria-pressed={layer === id}
+            onClick={() => setLayer(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
       <Graph
-        title="Граница источников, нашего ядра и доставки контента"
-        nodes={nodes}
-        edges={edges}
+        title="Семь систем · стрелка показывает, куда передаются данные"
+        height={700}
         selected={selected}
-        onSelect={setSelected}
-        height={570}
+        onSelect={(id) => setSelected(id as SystemId)}
         zones={[
-          { x: 15, y: 15, w: 245, h: 500, title: "Существующие системы" },
           {
-            x: 320,
+            x: 10,
+            y: 10,
+            w: 330,
+            h: 675,
+            title: "Источники учебных данных",
+            sub: "Не все нужны каждому типу курса",
+          },
+          {
+            x: 480,
             y: 230,
-            w: 560,
-            h: 315,
-            title: "Новое аналитическое ядро",
-            sub: "только чтение · Moodle продолжает обучать",
+            w: 290,
+            h: 230,
+            title: "Агрегация и классификация",
           },
-          {
-            x: 320,
-            y: 15,
-            w: 560,
-            h: 165,
-            title: "Доставка контента",
-            sub: "отдельный этап · не блокирует первые метрики",
-          },
+          { x: 815, y: 230, w: 215, h: 230, title: "Отчёты и решения" },
         ]}
+        nodes={systems.map((s) => {
+          const index = [
+            "materials",
+            "moodle",
+            "work",
+            "sheets",
+            "discord",
+          ].indexOf(s.id);
+          return {
+            id: s.id,
+            x: s.id === "db" ? 505 : s.id === "atlas" ? 835 : 40,
+            y: index >= 0 ? 75 + index * 120 : 310,
+            w: s.id === "db" ? 240 : s.id === "atlas" ? 175 : 265,
+            title: s.title,
+            sub: s.role,
+            tone:
+              s.id === "db"
+                ? ("dark" as const)
+                : s.id === "atlas"
+                  ? ("red" as const)
+                  : ("blue" as const),
+            inactive: optional(mode, s.id),
+          };
+        })}
+        edges={edges}
       />
       <div className="concept-inspector" aria-live="polite">
         <div>
           <span className="eyebrow">
-            {nodes.find((n) => n.id === selected)?.inactive
-              ? "ОПЦИОНАЛЬНЫЙ БЛОК"
-              : "ВЫБРАННАЯ СИСТЕМА"}
+            {optional(mode, selected)
+              ? "ДЛЯ ЭТОГО ТИПА КУРСА НЕ ПОДКЛЮЧЕНО"
+              : "РОЛЬ СИСТЕМЫ"}
           </span>
-          <h3>{info[0]}</h3>
-          <p>{info[1]}</p>
+          <h3>{system.title}</h3>
+          <p>{system.owns}</p>
         </div>
         <div>
-          <span className="eyebrow">ЗА СЧЁТ ЧЕГО РАБОТАЕТ</span>
-          <strong>{info[2]}</strong>
+          <span className="eyebrow">КАК ПОЛУЧАЕМ ДАННЫЕ</span>
+          <strong>{system.format}</strong>
+          <small>{system.method}</small>
         </div>
       </div>
-      <Section number="А" title="Кто за что отвечает">
-        <div className="ownership-grid">
-          <Block
-            title="Moodle"
-            sub="Где учатся и получают оценки"
-            tone="blue"
-          />
-          <Block
-            title="GitLab"
-            sub={hasContent ? "Где создают материалы" : "Где хранят код и MR"}
-          />
-          <Block title="Sheets" sub="Где предлагают назначения" />
-          <Block
-            title="Наш реестр"
-            sub="Где утверждён личный план"
-            tone="dark"
-          />
-        </div>
-        <Hint>
-          Курс Moodle — контейнер активностей. Программа — учебный продукт. План
-          — обязательства конкретного студента. Это три разных объекта.
-        </Hint>
-      </Section>
-      <Section number="Б" title="Один человек в разных системах">
-        <Flow label="Связывание аккаунтов">
+      <Section
+        number="А"
+        title="Первый вход в активность: закрепить и показать"
+      >
+        <Flow label="Закрепление версии при первой активности">
           {[
+            <Block title="Moodle" sub="Проверенный user_id + course_id" />,
             <Block
-              title="Moodle user 104"
-              sub="Главный учебный аккаунт"
-              tone="blue"
-            />,
-            <Block
-              title="Внутренний S-1"
-              sub="Проверенная таблица связей"
+              title="БД: создать закрепление"
+              sub="Последний опубликованный тег; один раз"
               tone="dark"
             />,
-            <Block title="GitLab user 52" sub="Аккаунт для MR" />,
+            <Block
+              title="GitLab материалов"
+              sub="Копия user → tag из очереди БД"
+            />,
+            <Block
+              title="Moodle открывает сборку"
+              sub="Плагин / сервис выбирает точный тег"
+              tone="blue"
+            />,
           ]}
         </Flow>
         <Hint>
-          Email помогает предложить совпадение. Подтверждённый source ID
-          связывает аккаунты; email из URL не даёт доступ к данным.
+          Сборка по тегу не определяет пользователя сама. Moodle передаёт
+          проверенный контекст, компонент доставки читает закрепление в БД и
+          отдаёт нужный HTML. Защищённый файл закреплений в GitLab — проекция
+          БД; при задержке синхронизации работает закрепление из БД.
         </Hint>
       </Section>
-      <div className="next-page">
-        <a href="#data">Теперь проследим путь одной записи →</a>
-      </div>
+      <Section
+        number="Б"
+        title="Новый релиз: сравнить, принять решение, синхронизировать"
+      >
+        <Flow label="Переход между версиями">
+          {[
+            <Block
+              title="GitLab: новый тег"
+              sub="CI проверил сборку и манифест"
+            />,
+            <Block
+              title="Job в контуре БД"
+              sub="Сравнить v студента с правилами манифеста"
+            />,
+            <Block
+              title="LearningAtlas"
+              sub="Критично → вручную или автополитика"
+              tone="red"
+            />,
+            <Block
+              title="БД → GitLab + Moodle"
+              sub="Новая версия, трек, перенос и история"
+              tone="dark"
+            />,
+          ]}
+        </Flow>
+      </Section>
+      <Section
+        number="В"
+        title="Трек задаёт обязательства; источники подтверждают выполнение"
+      >
+        <div className="architecture-pair">
+          <div>
+            <span className="eyebrow">ЧТО НУЖНО СДЕЛАТЬ</span>
+            <Flow label="Назначения">
+              {[
+                <Block
+                  title="Sheets / LearningAtlas"
+                  sub="Группа или личное назначение"
+                />,
+                <Block
+                  title="БД: трек R2"
+                  sub="Кто · что · к какому сроку"
+                  tone="blue"
+                />,
+              ]}
+            </Flow>
+          </div>
+          <div>
+            <span className="eyebrow">ЧТО УЖЕ СДЕЛАНО</span>
+            <Flow label="Результаты">
+              {[
+                <Block
+                  title="Moodle / GitLab"
+                  sub="Попытки, MR, подтверждения"
+                />,
+                <Block
+                  title="БД: принятый итог"
+                  sub="По правилам этого курса"
+                  tone="dark"
+                />,
+              ]}
+            </Flow>
+          </div>
+        </div>
+        <Hint>
+          Discord уточняет условия. Сообщение сначала связывается с автором,
+          группой и заданием; затем применяется подтверждённое изменение. CI,
+          jobs, бот и компонент доставки — части этих семи систем, а не
+          дополнительные глобальные системы.
+        </Hint>
+      </Section>
     </>
   );
 }
