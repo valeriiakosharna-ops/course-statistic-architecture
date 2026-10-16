@@ -43,11 +43,14 @@ export default function DataFlow({ mode }: { mode: CourseMode }) {
     }),
     [original, missing, verified],
   );
+  const sourceFacts = intake.facts.filter(
+    (p) => p.source === packet.source && p.instance === packet.instance,
+  );
   const destination = routePacket(packet);
   const receive = () => {
     if (outage) {
       setFeedback(
-        intake.facts.length
+        sourceFacts.length
           ? "Источник недоступен. Последние факты сохранены; свежесть помечена как устаревшая."
           : "Источник недоступен. Успешной загрузки ещё не было; качество данных неизвестно.",
       );
@@ -146,7 +149,7 @@ export default function DataFlow({ mode }: { mode: CourseMode }) {
       as_of: "2026-10-16T12:00:00Z",
       calculation: "принятый обязательный вес / весь обязательный вес",
       quality: outage
-        ? intake.facts.length
+        ? sourceFacts.length
           ? "STALE: источник недоступен"
           : "UNKNOWN: успешной загрузки не было"
         : destination === "review-queue"
@@ -446,10 +449,10 @@ export default function DataFlow({ mode }: { mode: CourseMode }) {
             Свежесть{" "}
             <strong>
               {outage
-                ? intake.facts.length
+                ? sourceFacts.length
                   ? "Устарела"
                   : "Неизвестна"
-                : intake.facts.length
+                : sourceFacts.length
                   ? "Демо-срез 12:00 UTC"
                   : "Записей ещё нет"}
             </strong>

@@ -2760,3 +2760,12 @@ footer details a {
     height: 26px;
   }
 }
+
+@media (max-width: 650px) {
+  .sidebar {
+    visibility: hidden;
+  }
+  .sidebar.open {
+    visibility: visible;
+  }
+}
