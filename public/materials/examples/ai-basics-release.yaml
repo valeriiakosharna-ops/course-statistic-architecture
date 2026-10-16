@@ -1,0 +1,37 @@
+schema_version: '1.0'
+program_id: AI-BASICS
+curriculum_release: '5.0.0'
+state: published
+published_at: '2026-10-16T00:00:00Z'
+default_for_new_learners: true
+learning_start_policy: first_meaningful_action
+expected_duration_days: 30
+version_health:
+  warning_duration_percent: 150
+  critical_duration_percent: 200
+  version_support_days: 180
+units:
+  - task_id: AI-INTRO-001
+    required: true
+    weight: 1
+    content:
+      content_unit_id: AI-INTRO-001
+      version: '2.1.0'
+      sha256: 'placeholder-demo-hash'
+      entrypoint: 'https://example.invalid/ai-basics/ai-intro/2.1.0/index.html'
+    assessment:
+      id: AI-INTRO-CHECK
+      version: '1.0.0'
+      max_score: 10
+  - task_id: AI-SAFETY-003
+    required: true
+    weight: 2
+    content:
+      content_unit_id: AI-SAFETY-003
+      version: '5.0.0'
+      sha256: 'placeholder-demo-hash'
+      entrypoint: 'https://example.invalid/ai-basics/ai-safety/5.0.0/index.html'
+    assessment:
+      id: AI-SAFETY-QUIZ
+      version: '3.0.0'
+      max_score: 15

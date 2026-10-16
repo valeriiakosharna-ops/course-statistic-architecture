@@ -1,0 +1,13 @@
+{
+  "learning_instance_id": "DEMO-LI-1045",
+  "source": {"curriculum_version": "1.0.0", "plan_revision": 1, "completion_percent": 78},
+  "target": {"curriculum_version": "5.0.0", "preview_completion_percent": 65},
+  "status": "PREVIEW_ONLY",
+  "decisions": [
+    {"old_task_id": "AI-INTRO-001", "target_task_id": "AI-INTRO-001", "decision": "CARRY_OVER", "basis": "explicit_compatible_assessment"},
+    {"old_task_id": "AI-SAFETY-003", "target_task_id": "AI-SAFETY-003", "decision": "REASSESS", "basis": "changed_assessment_criteria"},
+    {"old_task_id": null, "target_task_id": "AI-AGENTS-008", "decision": "NEW_REQUIRED", "basis": "new_curriculum_task"}
+  ],
+  "needs_staff_approval": true,
+  "preserve_old_results": true
+}

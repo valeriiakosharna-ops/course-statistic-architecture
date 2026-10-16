@@ -1,0 +1,19 @@
+flowchart TD
+ A[Google Sheet rows: group/task/due] --> P[Proposed plan changes]
+ P --> H{Approve plan revision?}
+ H -- Yes --> L[(Locked individual plans)]
+ H -- No --> Z[Keep existing revision]
+ M[Moodle assignments / submitted MR URLs] --> E[Evidence intake]
+ G[GitLab MR, diffs, reviews] --> E
+ E --> C[Generate task candidates within applicable plans]
+ L --> C
+ C --> D{Clear safe match?}
+ D -- Yes --> K[Create evidence-task links]
+ D -- Ambiguous --> R[Human review inbox]
+ R --> K
+ D -- Insufficient --> U[Unresolved evidence]
+ K --> W{Accepted under course policy?}
+ W -- Yes --> T[Accepted result]
+ W -- No --> O[Submitted / review / rework status]
+ T --> X[Student and group analytics]
+ O --> X

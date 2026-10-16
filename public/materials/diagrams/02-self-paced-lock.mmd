@@ -1,0 +1,20 @@
+sequenceDiagram
+ autonumber
+ participant L as Learner
+ participant M as Moodle + plugin
+ participant V as Version Resolver
+ participant DB as Learning Registry
+ participant C as Content Storage
+ L->>M: First meaningful learning action
+ M->>V: Resolve via authenticated context
+ V->>DB: Find LearningInstance with lock
+ alt Exists
+  DB-->>V: Pinned curriculum & content refs
+ else Missing
+  V->>DB: Atomic create instance and R1 from stable published version
+  DB-->>V: Locked plan and refs
+ end
+ V-->>M: Signed launch for immutable content artifact
+ M->>C: iframe load authorized artifact
+ C-->>L: Pinned HTML + assets
+ Note over M,DB: New course releases do not alter the lock

@@ -1,0 +1,12 @@
+erDiagram
+ PROGRAM ||--o{ CURRICULUM_VERSION : defines
+ PROGRAM ||--o{ LEARNING_INSTANCE : runs
+ LEARNER ||--o{ LEARNING_INSTANCE : has
+ LEARNING_INSTANCE ||--o{ PLAN_REVISION : snapshots
+ PLAN_REVISION ||--o{ ASSIGNMENT : consists_of
+ TASK ||--o{ ASSIGNMENT : required_by
+ ASSIGNMENT ||--o{ EVIDENCE_LINK : supported_by
+ EVIDENCE ||--o{ EVIDENCE_LINK : references
+ ASSIGNMENT ||--o{ RESULT : evaluates
+ LEARNING_INSTANCE ||--o{ METRIC_SNAPSHOT : produces
+ CONTENT_UNIT ||--o{ CONTENT_ARTIFACT : releases

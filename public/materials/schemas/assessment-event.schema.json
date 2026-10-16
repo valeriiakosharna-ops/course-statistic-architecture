@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Assessment Event (draft)",
+  "type": "object",
+  "required": ["event_id", "event_type", "schema_version", "learning_instance_id", "task_id", "assessment_version", "attempt_id", "occurred_at"],
+  "properties": {
+    "event_id": {"type": "string"},
+    "event_type": {"enum": ["assessment.started", "assessment.submitted", "assessment.graded", "assessment.completed"]},
+    "schema_version": {"type": "string"},
+    "learning_instance_id": {"type": "string"},
+    "task_id": {"type": "string"},
+    "content_version": {"type": "string"},
+    "assessment_version": {"type": "string"},
+    "attempt_id": {"type": "string"},
+    "score": {"type": ["number", "null"]},
+    "max_score": {"type": ["number", "null"], "exclusiveMinimum": 0},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "source_ref": {"type": "string"}
+  },
+  "additionalProperties": true
+}
