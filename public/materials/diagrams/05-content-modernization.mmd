@@ -1,0 +1,13 @@
+flowchart TD
+ G[Existing GitLab AsciiDoc + inline HTML] --> LB[Legacy builder: unchanged]
+ G --> MA[Optional manifest adapter]
+ MA --> V[Validate stable IDs/version/assessment]
+ V --> CI[CI builds versioned artifact]
+ LB --> A[(Immutable artifact storage)]
+ CI --> A
+ A --> R[Content Registry]
+ R --> P[Moodle plugin delivery adapter]
+ U[New modular interactive packages] --> CI
+ P --> E[Student version-locked iframe]
+ E --> S[Validated result integration into Moodle]
+ S --> AN[Analytics evidence]

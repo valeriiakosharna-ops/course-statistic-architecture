@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Migration Decision (draft)",
+  "type": "object",
+  "required": ["learning_instance_id", "source_plan_revision", "target_curriculum_version", "decision_items", "mode"],
+  "properties": {
+    "learning_instance_id": {"type": "string"},
+    "source_plan_revision": {"type": "integer", "minimum": 1},
+    "target_curriculum_version": {"type": "string"},
+    "mode": {"enum": ["preview", "apply"]},
+    "idempotency_key": {"type": "string"},
+    "decision_items": {"type": "array", "items": {"type": "object", "required": ["target_task_id", "action"], "properties": {"target_task_id": {"type": "string"}, "source_task_id": {"type": ["string", "null"]}, "action": {"enum": ["CARRY_OVER", "REASSESS", "SUPPLEMENT", "NEW_REQUIRED", "RETIRED", "MANUAL_REVIEW"]}, "reason": {"type": "string"}}}}
+  },
+  "additionalProperties": true
+}

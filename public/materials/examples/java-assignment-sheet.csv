@@ -1,0 +1,5 @@
+task_id,group,required,deadline,timezone,max_points,submission_method
+JAVA-001,A,TRUE,2026-10-20 23:59,Europe/Kyiv,5,moodle_mr_link
+JAVA-011,A,TRUE,2026-10-25 23:59,Europe/Kyiv,5,gitlab_mr
+JAVA-011,B,TRUE,2026-10-29 23:59,Europe/Kyiv,5,gitlab_mr
+JAVA-015,A,FALSE,,Europe/Kyiv,10,moodle_quiz

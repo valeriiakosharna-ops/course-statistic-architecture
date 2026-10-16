@@ -1,0 +1,17 @@
+flowchart TD
+ O[Locked plan R1 on v1] --> P[Select target v5]
+ P --> D[Dry-run task / assessment compatibility]
+ D --> C{Decision for each obligation}
+ C --> A[Carry-over accepted result]
+ C --> B[Supplement / reassess]
+ C --> N[New required work]
+ C --> R[Retired / manual review]
+ A --> S[Preview new denominator, credit and deadlines]
+ B --> S
+ N --> S
+ R --> S
+ S --> H{Staff approval?}
+ H -- No --> O
+ H -- Yes --> T[Atomic create plan revision R2]
+ T --> E[Append migration audit and recalculate metrics]
+ E --> F[Display v1 history and v5 current progress separately]

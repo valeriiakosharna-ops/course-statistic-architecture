@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Learning Instance (draft)",
+  "type": "object",
+  "required": ["id", "program_id", "learner_id", "started_at", "locked_curriculum_version", "active_plan_revision", "state"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "program_id": {"type": "string"},
+    "learner_id": {"type": "string"},
+    "started_at": {"type": "string", "format": "date-time"},
+    "start_source": {"enum": ["explicit_start", "first_interaction", "first_assessment", "imported", "estimated"]},
+    "locked_curriculum_version": {"type": "string"},
+    "active_plan_revision": {"type": "integer", "minimum": 1},
+    "state": {"enum": ["in_progress", "paused", "completed", "withdrawn"]},
+    "expected_duration_days": {"type": "integer", "minimum": 1}
+  },
+  "additionalProperties": true
+}

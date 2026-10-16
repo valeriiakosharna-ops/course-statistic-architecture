@@ -1,0 +1,30 @@
+flowchart LR
+ subgraph Sources[Existing systems]
+  M[Moodle / quizzes / plugin]
+  G[GitLab / contents and MR]
+  S[Google Sheets / plan proposals]
+  D[Discord / optional]
+ end
+ subgraph Core[Analytics platform]
+  I[Read-only adapters & scheduled sync]
+  R[(Raw evidence + event log)]
+  N[Normalizer & identity mapping]
+  X[Review / MR matching]
+  L[(Canonical Learning Registry)]
+  V[Version lock & migrations]
+  A[Metric engine & snapshots]
+ end
+ subgraph Delivery[Product]
+  U[Admin / teacher / student UI]
+  B[BI / API]
+ end
+ M --> I
+ G --> I
+ S --> I
+ D -.-> I
+ I --> R --> N --> L
+ N --> X --> L
+ L --> V --> A
+ L --> A
+ A --> U
+ A --> B

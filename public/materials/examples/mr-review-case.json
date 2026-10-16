@@ -1,0 +1,12 @@
+{
+  "review_case_id": "RC-1042",
+  "reason_codes": ["MULTIPLE_TOP_CANDIDATES", "MR_HAS_MULTIPLE_TASK_FILES"],
+  "evidence": {"source": "gitlab", "project_id": 123, "mr_iid": 42, "head_sha": "demo-sha-abc"},
+  "learner_id": "DEMO-STU-1045",
+  "candidates": [
+    {"task_id": "JAVA-011", "matching_score": 88, "signals": ["file_path", "topic_semantics"]},
+    {"task_id": "JAVA-010", "matching_score": 84, "signals": ["file_path", "topic_semantics"]}
+  ],
+  "status": "NEEDS_REVIEW",
+  "grade_accepted": false
+}
