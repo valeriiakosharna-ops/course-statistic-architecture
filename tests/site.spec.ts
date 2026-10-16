@@ -24,62 +24,71 @@ test("six visual chapters load without browser errors or page overflow", async (
   }
   expect(errors).toEqual([]);
 });
-test("atomic terms reveal a short definition and relationship diagrams can be explored with keyboard and zoom", async ({
+test("22 terms follow the learning hierarchy and diagrams support keyboard exploration", async ({
   page,
 }) => {
   await page.goto("/#concepts");
+  await expect(page.locator(".concept-chips button")).toHaveCount(22);
   await page
     .locator(".concept-chips")
     .first()
-    .getByRole("button", { name: "Материал", exact: true })
+    .getByRole("button", { name: "Теория", exact: true })
     .click();
   await expect(page.locator(".concept-inspector")).toContainText(
-    "То, что студент читает",
+    "Материал, который нужно изучить",
   );
   await page
     .getByRole("button", { name: "Как появляется результат", exact: true })
     .click();
   const node = page
     .locator(".graph-node[role=button]")
-    .filter({ hasText: "Принятый результат" });
+    .filter({ hasText: "Карточка студента" });
   await node.focus();
   await page.keyboard.press("Enter");
   await expect(page.locator(".compact-inspector").first()).toContainText(
-    "Работа зачтена",
+    "Связанные данные одного человека",
   );
   await page.getByRole("button", { name: "Увеличить схему" }).click();
   await expect(page.locator(".graph-toolbar")).toContainText("110%");
-  await page.getByText(/Технический словарь/, { exact: false }).click();
-  await page
-    .getByRole("textbox", { name: "Поиск технического понятия" })
-    .fill("Evidence");
-  await expect(page.locator(".reference .concept-chips button")).toHaveCount(1);
+  await page.getByRole("textbox", { name: "Найти термин" }).fill("Манифест");
+  await expect(page.locator(".concept-chips button")).toHaveCount(1);
   await page.goto("/#glossary/learning-plan");
   await expect(page.locator(".concept-inspector")).toContainText(
-    "План студента",
+    "Учебный трек",
   );
 });
-test("course selection changes ecosystem connections and available data sources", async ({
+test("exactly seven global systems expose separate collection, version and track flows", async ({
   page,
 }) => {
   await page.goto("/#ecosystems");
-  await expect(page.locator(".graph-node.is-inactive")).toHaveCount(2);
+  await expect(page.locator(".graph-node")).toHaveCount(7);
+  await expect(page.locator(".graph-node.is-inactive")).toHaveCount(3);
   await page
     .getByRole("combobox", { name: "Тип курса", exact: true })
     .selectOption("java");
-  await expect(page.locator(".graph-node.is-inactive")).toHaveCount(2);
+  await expect(page.locator(".graph-node.is-inactive")).toHaveCount(0);
   await page
     .locator(".graph-node")
-    .filter({ hasText: "GitLab · работы" })
+    .filter({ hasText: "GitLab · студенты" })
     .click();
   await expect(page.locator(".concept-inspector")).toContainText(
-    "MR, diff, review",
+    "Merge сам по себе не равен зачёту",
+  );
+  await page.getByRole("button", { name: "Смена версии", exact: true }).click();
+  await expect(page.locator(".graph-shell")).toContainText(
+    "решение о переходе",
+  );
+  await page
+    .getByRole("button", { name: "Назначение трека", exact: true })
+    .click();
+  await expect(page.locator(".graph-shell")).toContainText(
+    "кандидат уточнения",
   );
   await page.goto("/#data");
   await expect(
     page
       .locator(".source-controls")
-      .getByRole("button", { name: "Sheets", exact: true }),
+      .getByRole("button", { name: "Discord", exact: true }),
   ).toBeVisible();
 });
 test("ingestion shows formats, suppresses duplicates, preserves records on outage, and routes unresolved identities", async ({
@@ -114,51 +123,179 @@ test("ingestion shows formats, suppresses duplicates, preserves records on outag
   await page
     .getByRole("button", { name: "Подтвердить связь", exact: true })
     .click();
-  await expect(page.locator(".intake-counters")).toContainText("Подтверждения");
+  await expect(page.locator(".intake-counters")).toContainText(
+    "Подтверждения выполнения",
+  );
   await page
     .locator(".source-controls")
-    .getByRole("button", { name: "Sheets", exact: true })
+    .getByRole("button", { name: "Sheets · назначения", exact: true })
     .click();
-  await expect(page.locator(".intake-counters")).toContainText("Проект плана");
+  await expect(page.locator(".intake-counters")).toContainText("Проект трека");
   await page.getByRole("button", { name: /Ручной пилот/ }).click();
   await expect(page.locator(".json-panel pre")).toContainText(
-    "row,group,task_id",
+    "row_id,group,activity_id",
   );
 });
-test("version locks survive releases, resolver never falls back to latest, and migration retains history", async ({
+test("first-start pinning, manual migration, partial delivery and shared statistics retain history", async ({
   page,
 }) => {
   await page.goto("/#versions");
-  for (let v = 2; v <= 5; v++)
-    await page
-      .getByRole("button", { name: `Опубликовать v${v}`, exact: true })
-      .click();
-  await expect(page.getByTestId("old-version")).toHaveText("Закреплено v1");
-  await page.getByRole("checkbox", { name: "Резолвер недоступен" }).check();
+  const start = page.getByRole("button", {
+    name: "Первая / повторная активность нового студента",
+  });
+  await start.click();
   await page
-    .getByRole("checkbox", { name: "Есть проверенный кеш закрепления" })
-    .uncheck();
+    .getByRole("button", { name: "Опубликовать v3 в примере старта" })
+    .click();
+  await start.click();
+  await expect(page.getByText("Закреплено v2", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("old-version")).toHaveText("Закреплено v1");
+  await page
+    .getByRole("checkbox", { name: "Компонент доставки недоступен" })
+    .check();
   await expect(
-    page.getByRole("strong").filter({ hasText: "Не запускать урок" }),
+    page.getByText("Не запускать урок", { exact: true }),
   ).toBeVisible();
   await page
-    .getByRole("button", { name: "Сравнить v1 → v5", exact: true })
-    .click();
-  await expect(page.locator(".migration-score")).toContainText("4/6");
-  await expect(page.locator(".migration-score")).toContainText("2/6");
-  const approve = page.getByRole("button", {
-    name: "Утвердить R2 — только в этом демо",
-  });
-  await expect(approve).toBeDisabled();
-  await page
-    .getByRole("checkbox", { name: /Преподаватель разобрал ручной случай/ })
+    .getByRole("checkbox", {
+      name: "Есть проверенный кеш текущего закрепления",
+    })
     .check();
-  await approve.click();
-  await expect(page.getByTestId("old-version")).toHaveText("Закреплено v5");
-  await expect(page.locator(".history-strip")).toContainText("R1: 4/6");
   await expect(
-    page.getByRole("button", { name: "R2 создана · повтор заблокирован" }),
-  ).toBeDisabled();
+    page.getByText("Открыть course-v1/index.html", { exact: true }),
+  ).toBeVisible();
+  const apply = page.getByRole("button", { name: "Утвердить переход вручную" });
+  await expect(apply).toBeDisabled();
+  await page
+    .getByRole("checkbox", {
+      name: "Уполномоченный преподаватель подтвердил переход",
+    })
+    .check();
+  await apply.click();
+  await expect(page.getByTestId("old-version")).toHaveText("Закреплено v3");
+  await expect(page.locator(".history-strip")).toContainText("R1 · v1: 4/6");
+  await expect(page.locator(".history-strip")).toContainText("Текущая R2 · v3");
+  await page
+    .getByRole("checkbox", { name: "GitLab недоступен при доставке" })
+    .check();
+  await page
+    .getByRole("button", { name: "Синхронизировать GitLab и Moodle" })
+    .click();
+  await expect(page.getByRole("status")).toContainText(
+    "Moodle обновлён. GitLab недоступен",
+  );
+  await expect(page.locator(".json-panel")).toContainText(
+    '"projection_revision": 1',
+  );
+  await page
+    .getByRole("checkbox", { name: "GitLab недоступен при доставке" })
+    .uncheck();
+  await page
+    .getByRole("button", { name: "Синхронизировать GitLab и Moodle" })
+    .click();
+  await expect(page.locator(".json-panel")).toContainText(
+    '"projection_revision": 2',
+  );
+  await page.locator(".history-strip").getByRole("link").click();
+  await expect(page.getByTestId("student-card")).toContainText("v3 · R2");
+  await expect(page.getByTestId("report-progress")).toHaveText("33,3%");
+});
+test("automatic migration needs an enabled policy, complete mapping and fresh facts", async ({
+  page,
+}) => {
+  await page.goto("/#versions");
+  await page
+    .getByRole("combobox", { name: "Режим перехода" })
+    .selectOption("auto");
+  const apply = page.getByRole("button", {
+    name: "Выполнить автоматический переход",
+  });
+  await page
+    .getByRole("checkbox", { name: "Владелец разрешил автополитику" })
+    .check();
+  await expect(apply).toBeDisabled();
+  await page
+    .getByRole("checkbox", { name: "Разрешены повторные и новые задания" })
+    .check();
+  await expect(apply).toBeEnabled();
+  for (const name of [
+    "В манифесте не хватает сопоставления",
+    "Данные студента устарели",
+  ]) {
+    await page.getByRole("checkbox", { name }).check();
+    await expect(apply).toBeDisabled();
+    await page.getByRole("checkbox", { name }).uncheck();
+  }
+  await apply.click();
+  await expect(page.getByTestId("old-version")).toHaveText("Закреплено v3");
+  await page.getByText("Аудит решений · 1", { exact: true }).click();
+  await expect(
+    page
+      .locator(".reference")
+      .filter({ hasText: "Аудит решений" })
+      .locator("pre"),
+  ).toContainText("policy@1");
+});
+test("a migration opened from statistics changes only the selected student", async ({
+  page,
+}) => {
+  await page.goto("/#statistics");
+  await page
+    .getByRole("combobox", { name: "Тип курса", exact: true })
+    .selectOption("java");
+  await page
+    .getByRole("combobox", { name: "Студент", exact: true })
+    .selectOption("S-2");
+  await page
+    .getByTestId("student-card")
+    .getByRole("link", { name: "Сравнить и перенести версию →" })
+    .click();
+  await expect(
+    page.getByRole("combobox", { name: "Студент для перехода" }),
+  ).toHaveValue("S-2");
+  await page
+    .getByRole("checkbox", {
+      name: "Уполномоченный преподаватель подтвердил переход",
+    })
+    .check();
+  await page.getByRole("button", { name: "Утвердить переход вручную" }).click();
+  await page.locator(".history-strip").getByRole("link").click();
+  await expect(
+    page.getByRole("combobox", { name: "Студент", exact: true }),
+  ).toHaveValue("S-2");
+  await expect(page.getByTestId("student-card")).toContainText("v3 · R2");
+  await page
+    .getByRole("combobox", { name: "Студент", exact: true })
+    .selectOption("S-1");
+  await expect(page.getByTestId("student-card")).toContainText("v1 · R1");
+});
+test("track assignment and confirmed Discord deadlines update the same student card", async ({
+  page,
+}) => {
+  await page.goto("/#data");
+  await page
+    .getByRole("combobox", { name: "Тип курса", exact: true })
+    .selectOption("java");
+  const apply = page.getByRole("button", {
+    name: "Применить трек к Студенту 01",
+  });
+  await expect(apply).toBeDisabled();
+  await page
+    .getByRole("checkbox", { name: "Преподаватель утвердил назначение" })
+    .check();
+  await apply.click();
+  await expect(page.getByTestId("shared-track")).toContainText(
+    "4 обязательных",
+  );
+  await page
+    .getByRole("button", { name: "Подтвердить для Студента 01 · группа A" })
+    .click();
+  await page.getByTestId("shared-track").getByRole("link").click();
+  await expect(page.getByTestId("student-card")).toContainText("v1 · R3");
+  await expect(page.locator(".metric-card").first()).toContainText("/ 4");
+  await expect(
+    page.locator("tbody tr").filter({ hasText: "TASK-01" }).first(),
+  ).toContainText("10-22 20:59");
 });
 test("student and group reports derive from course plans and MR acceptance is a separate action", async ({
   page,
@@ -199,6 +336,13 @@ test("student and group reports derive from course plans and MR acceptance is a 
     .first()
     .click();
   await expect(page.locator(".student-bars>div")).toHaveCount(1);
+  await page.getByRole("button", { name: "Курс", exact: true }).click();
+  await expect(page.locator(".student-bars>div")).toHaveCount(6);
+  await expect(page.locator(".metric-card").first()).toContainText("/ 195");
+  await expect(page.locator(".metric-card").nth(1)).toContainText("По версиям");
+  await expect(page.getByTestId("student-card")).toContainText(
+    "4 требуют решения",
+  );
 });
 test("MVP steps expose their outcome and original materials remain accessible", async ({
   page,
@@ -210,7 +354,7 @@ test("MVP steps expose their outcome and original materials remain accessible", 
     .filter({ hasText: "Миграции" })
     .click();
   await expect(
-    page.getByRole("heading", { name: "Контролируемые миграции" }),
+    page.getByRole("heading", { name: "MVP 5 · Контролируемые миграции" }),
   ).toBeVisible();
   await page.locator("footer summary").click();
   for (const a of await page.locator("footer details a").all()) {

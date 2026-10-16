@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, Search } from "lucide-react";
-import { terms } from "../data";
 import {
   Block,
   Flow,
@@ -9,534 +7,315 @@ import {
   Hint,
   Section,
 } from "../components/Diagram";
-import type { GraphEdge, GraphNode } from "../components/Diagram";
-
-const dictionaryOrder = [
-  "content-unit",
-  "task",
-  "assessment",
-  "task-version",
-  "content-version",
-  "assessment-version",
-  "artifact",
-  "grade-item",
-  "attempt",
-  "submission",
-  "evidence",
-  "result",
-  "assignment",
-  "moodle-assignment",
-  "curriculum",
-  "curriculum-version",
-  "learning-plan",
-  "plan-revision",
-  "manifest",
-  "version-lock",
-  "program",
-  "course",
-  "enrollment",
-  "learning-instance",
-  "group",
-  "metric-version",
-  "metric-snapshot",
-  "provenance",
-  "pace",
-  "data-health",
-  "version-health",
-  "connector",
-  "snapshot",
-  "registry",
-  "identity",
-  "reconciliation",
-  "review",
-  "matching-rule",
-  "legacy-builder",
-  "runtime",
-  "resolver",
-  "migration",
-  "carry-over",
-  "reassess",
-  "supplement",
-  "retired",
-];
-const orderedTerms = [...terms].sort(
-  (a, b) => dictionaryOrder.indexOf(a.id) - dictionaryOrder.indexOf(b.id),
-);
-
+import { vocabulary } from "../platform";
 const levels = [
-  {
-    title: "Поля — маленькие значения",
-    relation: "Поля складываются в запись",
-    items: [
-      ["field-id", "ID"],
-      ["field-time", "Время"],
-      ["field-value", "Значение"],
-      ["field-source", "Источник"],
-    ],
-  },
-  {
-    title: "Учебные кирпичики",
-    relation: "Из них составляют требования",
-    items: [
-      ["content-unit", "Материал"],
-      ["task", "Задача"],
-      ["assessment", "Правило проверки"],
-    ],
-  },
-  {
-    title: "Записи о работе",
-    relation: "Ссылаются на студента и задачу",
-    items: [
-      ["assignment", "Назначение"],
-      ["attempt", "Попытка"],
-      ["evidence", "Подтверждение"],
-      ["result", "Результат"],
-    ],
-  },
-  {
-    title: "Составные учебные объекты",
-    relation: "Объединяют задачи и правила",
-    items: [
-      ["module", "Тема / модуль"],
-      ["curriculum-version", "Версия программы"],
-      ["learning-plan", "План студента"],
-    ],
-  },
-  {
-    title: "Обучение в целом",
-    relation: "Объединяет планы и прохождения",
-    items: [
-      ["program", "Программа"],
-      ["learning-instance", "Прохождение"],
-      ["group", "Группа"],
-    ],
-  },
-  {
-    title: "Статистика",
-    relation: "Вычисляется из принятых результатов",
-    items: [
-      ["metric-version", "Формула"],
-      ["metric-snapshot", "Снимок метрик"],
-      ["provenance", "Цепочка до источника"],
-    ],
-  },
-];
-const short: Record<string, [string, string, string]> = {
-  "field-id": [
-    "Идентификатор",
-    "ID — это метка объекта, а не его название.",
-    "TASK-01",
-  ],
-  "field-time": [
-    "Время",
-    "Когда произошло действие. Время получения храним отдельно.",
-    "16 октября, 12:00 UTC",
-  ],
-  "field-value": [
-    "Значение",
-    "Одно число или состояние. Нет данных и ноль различаются.",
-    "8 из 10; submitted",
-  ],
-  "field-source": [
-    "Ссылка на источник",
-    "Откуда пришла запись: система + экземпляр + тип + ID.",
-    "Moodle / school / quiz_attempt / 284",
-  ],
-  "content-unit": [
-    "Материал",
-    "То, что студент читает или открывает.",
-    "HTML-урок про циклы",
-  ],
-  task: [
-    "Задача",
-    "Что студент должен уметь сделать.",
-    "Написать цикл для обработки списка",
-  ],
-  assessment: [
-    "Правило проверки",
-    "Как понять, что задача выполнена, и сколько дать баллов.",
-    "Тест: 10 баллов, зачёт от 7",
-  ],
-  assignment: [
-    "Назначение",
-    "Эта задача назначена этому студенту, с весом и сроком.",
-    "Студент 01 → TASK-01 → до 20 октября",
-  ],
-  attempt: [
-    "Попытка",
-    "Одна попытка выполнить проверку.",
-    "Второй запуск теста: 8 из 10",
-  ],
-  evidence: [
-    "Подтверждение",
-    "Наблюдаемый факт: попытка, оценка, ссылка или MR.",
-    "MR !42 с решением задачи",
-  ],
-  result: [
-    "Принятый результат",
-    "Работа зачтена по правилу курса или решению преподавателя.",
-    "Преподаватель принял TASK-01",
-  ],
-  module: [
-    "Тема / модуль",
-    "Удобная группа материалов и задач. Необязательный уровень структуры.",
-    "Тема «Циклы»: урок + 3 задачи",
-  ],
-  "curriculum-version": [
-    "Версия программы",
-    "Зафиксированный состав задач, материалов и правил.",
-    "Java v2: 35 обязательных задач",
-  ],
-  "learning-plan": [
-    "План студента",
-    "Какие задачи обязательны именно этому студенту.",
-    "У группы A — 30 задач, у B — 35",
-  ],
-  program: [
-    "Программа",
-    "Учебный продукт, у которого могут быть разные выпуски.",
-    "«Основы ИИ», версии v1–v5",
-  ],
-  "learning-instance": [
-    "Прохождение",
-    "Одна попытка студента пройти программу по своему плану.",
-    "Первый старт → план R1 → завершение",
-  ],
-  group: [
-    "Группа",
-    "Студенты с общими назначениями. Личные исключения остаются в плане.",
-    "Группа Java A",
-  ],
-  "metric-version": [
-    "Формула",
-    "Точное правило расчёта показателя.",
-    "Принятый обязательный вес ÷ весь обязательный вес",
-  ],
-  "metric-snapshot": [
-    "Снимок метрик",
-    "Результат расчёта на дату с версией плана и формулы.",
-    "60% на 16 октября по R1",
-  ],
-  provenance: [
-    "Цепочка до источника",
-    "Возможность пройти от процента до исходной записи.",
-    "60% → 18 задач → решения → оценки / MR",
-  ],
-};
-const contentNodes: GraphNode[] = [
-  {
-    id: "content-unit",
-    x: 25,
-    y: 72,
-    title: "Материал",
-    sub: "что изучить",
-    tone: "blue",
-  },
-  {
-    id: "task",
-    x: 25,
-    y: 190,
-    title: "Задача",
-    sub: "что сделать",
-    tone: "blue",
-  },
-  {
-    id: "assessment",
-    x: 25,
-    y: 308,
-    title: "Правило проверки",
-    sub: "как зачесть",
-    tone: "red",
-  },
-  {
-    id: "module",
-    x: 310,
-    y: 190,
-    title: "Тема / модуль",
-    sub: "группа учебных единиц",
-  },
-  {
-    id: "curriculum-version",
-    x: 590,
-    y: 190,
-    title: "Версия программы",
-    sub: "неизменяемый состав",
-    w: 190,
-    tone: "blue",
-  },
-  {
-    id: "program",
-    x: 845,
-    y: 60,
-    title: "Программа",
-    sub: "все её выпуски",
-    w: 170,
-    tone: "dark",
-  },
-  {
-    id: "learning-plan",
-    x: 830,
-    y: 315,
-    title: "План студента",
-    sub: "обязательства + сроки",
-    w: 185,
-    tone: "red",
-  },
-];
-const contentEdges: GraphEdge[] = [
-  { from: "content-unit", to: "module", label: "входит в" },
-  { from: "task", to: "module", label: "входит в" },
-  { from: "assessment", to: "task", label: "проверяет" },
-  { from: "module", to: "curriculum-version", label: "входит в" },
-  { from: "program", to: "curriculum-version", label: "выпускает" },
-  { from: "curriculum-version", to: "learning-plan", label: "задаёт основу" },
-];
-const factNodes: GraphNode[] = [
-  {
-    id: "task",
-    x: 20,
-    y: 45,
-    title: "Задача",
-    sub: "постоянный ID",
-    w: 170,
-    tone: "blue",
-  },
-  {
-    id: "assignment",
-    x: 275,
-    y: 45,
-    title: "Назначение",
-    sub: "задача + студент + срок",
-    w: 205,
-    tone: "blue",
-  },
-  {
-    id: "learning-plan",
-    x: 570,
-    y: 45,
-    title: "План студента",
-    sub: "содержит назначения",
-    w: 205,
-    tone: "dark",
-  },
-  {
-    id: "attempt",
-    x: 20,
-    y: 245,
-    title: "Попытка / сдача",
-    sub: "студент сделал действие",
-    w: 190,
-  },
-  {
-    id: "evidence",
-    x: 290,
-    y: 245,
-    title: "Подтверждение",
-    sub: "запись из источника",
-    w: 190,
-  },
-  {
-    id: "result",
-    x: 575,
-    y: 245,
-    title: "Принятый результат",
-    sub: "проверка по правилам",
-    w: 200,
-    tone: "red",
-  },
-  {
-    id: "metric-snapshot",
-    x: 850,
-    y: 245,
-    title: "Статистика",
-    sub: "по своему плану",
-    w: 170,
-    tone: "blue",
-  },
-];
-const factEdges: GraphEdge[] = [
-  { from: "task", to: "assignment", label: "назначили" },
-  { from: "assignment", to: "learning-plan", label: "входит в" },
-  { from: "attempt", to: "evidence", label: "фиксируется" },
-  { from: "evidence", to: "result", label: "правило / учитель" },
-  { from: "assignment", to: "evidence", label: "связываем", dashed: true },
-  {
-    from: "learning-plan",
-    to: "result",
-    label: "применимые задачи",
-    dashed: true,
-  },
-  { from: "result", to: "metric-snapshot", label: "считаем" },
+  ["01", "Что делает студент", "Три вида учебной работы"],
+  ["02", "Как собран курс", "Активность → юнит → модуль"],
+  ["03", "Что назначено", "Версия, трек и правила перехода"],
+  ["04", "Что зафиксировано", "Результаты, сроки и подтверждения"],
+  ["05", "Что видит преподаватель", "Всё связано в карточке"],
+  ["06", "Где это существует", "Платформы — отдельная ветка понятий"],
 ];
 export default function Foundations({ detail }: { detail: string }) {
-  const [selected, setSelected] = useState(detail || "task");
+  const [selected, setSelected] = useState("theory"),
+    [view, setView] = useState("structure"),
+    [search, setSearch] = useState("");
   useEffect(() => {
-    if (detail) setSelected(detail);
+    const alias = detail === "learning-plan" ? "track" : detail;
+    if (vocabulary.some((t) => t.id === alias)) setSelected(alias);
   }, [detail]);
-  const [tab, setTab] = useState<"content" | "facts">("content");
-  const [query, setQuery] = useState("");
-  const known = terms.find((t) => t.id === selected);
-  const entry =
-    short[selected] ??
-    (known ? [known.name, known.definition, known.example] : short.task);
+  const term = vocabulary.find((t) => t.id === selected) ?? vocabulary[0];
   return (
     <>
       <Heading
-        kicker="01 / ОТ АТОМОВ К СИСТЕМЕ"
-        title="Из чего складывается учебная статистика"
-        sub="Нажимайте на понятия. Стрелки объясняют связи, а подписи — смысл."
+        kicker="01 / СЛОВАРЬ · 22 ПОНЯТИЯ"
+        title="От одного действия — к целому курсу"
+        sub="Нажмите на понятие. Ниже — как содержание, назначения и результаты связаны друг с другом."
       />
-      <div className="atom-strip">
-        <span className="eyebrow">Самый маленький уровень — поле</span>
+      <div className="concept-levels">
+        {levels.map(([n, name, sub], level) => (
+          <div className="concept-level" key={n}>
+            <span className="level-number">{n}</span>
+            <div className="level-name">
+              <strong>{name}</strong>
+              <small>{sub}</small>
+            </div>
+            <div className="concept-chips">
+              {vocabulary
+                .filter(
+                  (t) =>
+                    t.level === level &&
+                    (!search ||
+                      t.name.toLowerCase().includes(search.toLowerCase())),
+                )
+                .map((t) => (
+                  <button
+                    key={t.id}
+                    aria-pressed={selected === t.id}
+                    onClick={() => setSelected(t.id)}
+                  >
+                    {t.name}
+                  </button>
+                ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="concept-inspector" aria-live="polite">
         <div>
-          {levels[0].items.map(([id, name]) => (
+          <span className="eyebrow">ПОНЯТИЕ</span>
+          <h3>{term.name}</h3>
+          <p>{term.definition}</p>
+        </div>
+        <div>
+          <span className="eyebrow">НА ПРИМЕРЕ</span>
+          <strong>{term.example}</strong>
+          <small>{term.lives}</small>
+        </div>
+      </div>
+      <label className="glossary-search">
+        Найти термин{" "}
+        <input
+          aria-label="Найти термин"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Например: манифест"
+        />
+      </label>
+      <Section
+        number="А"
+        title="Три разных отношения: состоит / назначено / выполнено"
+      >
+        <div className="tabs" aria-label="Связи понятий">
+          {[
+            ["structure", "Как собран курс"],
+            ["track", "Что нужно студенту"],
+            ["result", "Как появляется результат"],
+          ].map(([id, label]) => (
             <button
               key={id}
-              className={selected === id ? "selected" : ""}
-              onClick={() => setSelected(id)}
+              aria-pressed={view === id}
+              className={view === id ? "selected" : ""}
+              onClick={() => setView(id)}
             >
-              {name}
-              <small>
-                {id === "field-id"
-                  ? "TASK-01"
-                  : id === "field-time"
-                    ? "12:00 UTC"
-                    : id === "field-value"
-                      ? "8 / 10"
-                      : "Moodle"}
-              </small>
+              {label}
             </button>
           ))}
         </div>
-        <ArrowRight size={20} />
-        <span className="record-example">
-          Запись попытки<code>кто · задача · время · балл · источник</code>
-        </span>
-      </div>
-      <Section number="А" title="Кирпичики → составные объекты">
-        <div className="concept-levels">
-          {levels.slice(1).map((level, i) => (
-            <div className="concept-level" key={level.title}>
-              <span className="level-number">{i + 1}</span>
-              <div className="level-name">
-                <strong>{level.title}</strong>
-                <small>{level.relation}</small>
-              </div>
-              <div className="concept-chips">
-                {level.items.map(([id, name]) => (
-                  <button
-                    aria-pressed={selected === id}
-                    className={selected === id ? "selected" : ""}
-                    key={id}
-                    onClick={() => setSelected(id)}
-                  >
-                    {name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="concept-inspector" aria-live="polite">
-          <div>
-            <span className="eyebrow">ВЫБРАННОЕ ПОНЯТИЕ</span>
-            <h3>{entry[0]}</h3>
-            <p>{entry[1]}</p>
-          </div>
-          <div>
-            <span className="eyebrow">НА ПРИМЕРЕ</span>
-            <strong>{entry[2]}</strong>
-          </div>
-        </div>
-      </Section>
-      <Section number="Б" title="Как понятия связаны">
-        <div className="tabs" aria-label="Тип связей">
-          <button
-            className={tab === "content" ? "selected" : ""}
-            aria-pressed={tab === "content"}
-            onClick={() => setTab("content")}
-          >
-            Что входит в курс
-          </button>
-          <button
-            className={tab === "facts" ? "selected" : ""}
-            aria-pressed={tab === "facts"}
-            onClick={() => setTab("facts")}
-          >
-            Как появляется результат
-          </button>
-        </div>
-        <Graph
-          title={
-            tab === "content"
-              ? "Учебная структура: «входит в» и «ссылается на»"
-              : "Назначения и факты — разные ветки"
-          }
-          nodes={tab === "content" ? contentNodes : factNodes}
-          edges={tab === "content" ? contentEdges : factEdges}
-          height={tab === "content" ? 420 : 380}
-          selected={selected}
-          onSelect={setSelected}
-        />
+        {view === "structure" && (
+          <Graph
+            title="Структура содержания · части входят в целое"
+            height={410}
+            selected={selected}
+            onSelect={setSelected}
+            zones={[
+              {
+                x: 10,
+                y: 10,
+                w: 1020,
+                h: 380,
+                title:
+                  "GitLab материалов хранит структуру → Moodle показывает активности",
+              },
+            ]}
+            nodes={[
+              { id: "theory", x: 40, y: 80, title: "Теория", sub: "изучить" },
+              {
+                id: "practice",
+                x: 40,
+                y: 190,
+                title: "Практика",
+                sub: "применить",
+              },
+              {
+                id: "test",
+                x: 40,
+                y: 300,
+                title: "Тест",
+                sub: "проверить знания",
+              },
+              {
+                id: "activity",
+                x: 315,
+                y: 190,
+                title: "Активность",
+                sub: "один отслеживаемый шаг",
+                tone: "blue",
+                w: 195,
+              },
+              {
+                id: "unit",
+                x: 610,
+                y: 190,
+                title: "Юнит",
+                sub: "несколько активностей",
+              },
+              {
+                id: "module",
+                x: 840,
+                y: 190,
+                title: "Модуль",
+                sub: "несколько юнитов",
+              },
+            ]}
+            edges={[
+              { from: "theory", to: "activity", label: "вид" },
+              { from: "practice", to: "activity", label: "вид" },
+              { from: "test", to: "activity", label: "вид" },
+              { from: "activity", to: "unit", label: "входит" },
+              { from: "unit", to: "module", label: "входит" },
+            ]}
+          />
+        )}
+        {view === "track" && (
+          <Graph
+            title="Каталог шире персонального учебного трека"
+            height={360}
+            selected={selected}
+            onSelect={setSelected}
+            nodes={[
+              {
+                id: "version",
+                x: 30,
+                y: 70,
+                w: 215,
+                title: "Версия курса",
+                sub: "каталог: 40 активностей",
+              },
+              {
+                id: "track",
+                x: 395,
+                y: 70,
+                w: 230,
+                title: "Учебный трек",
+                sub: "S-1: 30 обязательных",
+                tone: "blue",
+              },
+              {
+                id: "card",
+                x: 800,
+                y: 70,
+                w: 210,
+                title: "Карточка студента",
+                sub: "v1 · трек R1 · 20/30",
+                tone: "dark",
+              },
+              {
+                id: "manifest",
+                x: 395,
+                y: 240,
+                w: 230,
+                title: "Манифест",
+                sub: "переход v1 → v3",
+              },
+            ]}
+            edges={[
+              { from: "version", to: "track", label: "выбрать нужное" },
+              { from: "track", to: "card", label: "назначить" },
+              {
+                from: "manifest",
+                to: "track",
+                label: "перенести при смене версии",
+              },
+            ]}
+          />
+        )}
+        {view === "result" && (
+          <Graph
+            title="Результат и срок относятся к назначению студента"
+            height={420}
+            selected={selected}
+            onSelect={setSelected}
+            nodes={[
+              {
+                id: "activity",
+                x: 30,
+                y: 180,
+                title: "Активность",
+                sub: "назначена S-1",
+              },
+              {
+                id: "attempt",
+                x: 335,
+                y: 60,
+                title: "Попытка",
+                sub: "одна сдача",
+              },
+              { id: "point", x: 630, y: 60, title: "Балл", sub: "8 / 10" },
+              {
+                id: "mr",
+                x: 335,
+                y: 180,
+                title: "MR",
+                sub: "практическое решение",
+              },
+              {
+                id: "comment",
+                x: 630,
+                y: 180,
+                title: "Comment",
+                sub: "замечание к работе",
+              },
+              {
+                id: "deadline",
+                x: 335,
+                y: 310,
+                title: "Дедлайн",
+                sub: "срок назначения",
+              },
+              {
+                id: "card",
+                x: 850,
+                y: 180,
+                w: 175,
+                title: "Карточка студента",
+                sub: "связи + принятый итог",
+                tone: "dark",
+              },
+            ]}
+            edges={[
+              { from: "activity", to: "attempt", label: "сдать" },
+              { from: "attempt", to: "point", label: "оценить" },
+              { from: "activity", to: "mr", label: "подтвердить кодом" },
+              { from: "mr", to: "comment", label: "обсудить" },
+              { from: "activity", to: "deadline", label: "назначить срок" },
+              { from: "point", to: "card", label: "учесть" },
+              { from: "comment", to: "card", label: "сохранить" },
+              { from: "deadline", to: "card", label: "проверить вовремя ли" },
+            ]}
+          />
+        )}
         <div className="compact-inspector">
-          <strong>{entry[0]}</strong>
-          <span>{entry[1]}</span>
+          <strong>{term.name}</strong>
+          <span>{term.definition}</span>
         </div>
-        <Hint>
-          План содержит требования. Подтверждения связаны с требованиями.
-          Принятый результат получается после проверки — это не простая сумма
-          событий.
-        </Hint>
       </Section>
-      <Section number="В" title="Один пример целиком">
-        <Flow label="Как получается 60%">
+      <Section number="Б" title="Один учебный день — одна цепочка">
+        <Flow label="От активности к статистике">
           {[
-            <Block title="Задача на цикл" sub="Учебный кирпичик" />,
-            <Block title="Назначили 30 задач" sub="Личный план R1" />,
             <Block
-              title="18 работ приняты"
-              sub="Не просто отправлены"
-              tone="red"
+              title="Теория → тест → практика"
+              sub="Активности внутри юнита"
             />,
             <Block
-              title="18 ÷ 30 = 60%"
-              sub="Каждый вес равен 1"
+              title="Трек S-1, версия v1"
+              sub="Назначены именно эти активности"
               tone="blue"
+            />,
+            <Block title="Попытка + MR + балл" sub="Факты выполнения" />,
+            <Block
+              title="Карточка → LearningAtlas"
+              sub="Прогресс по назначенному треку"
+              tone="dark"
             />,
           ]}
         </Flow>
       </Section>
-      <details className="reference">
-        <summary>Технический словарь · {terms.length} понятий</summary>
-        <label className="search">
-          <Search size={17} />
-          <input
-            aria-label="Поиск технического понятия"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Термин на русском или английском"
-          />
-        </label>
-        <div className="concept-chips">
-          {orderedTerms
-            .filter((t) =>
-              `${t.name} ${t.en}`.toLowerCase().includes(query.toLowerCase()),
-            )
-            .map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setSelected(t.id)}
-                aria-pressed={selected === t.id}
-              >
-                {t.name}
-              </button>
-            ))}
-        </div>
-        <div className="compact-inspector">
-          <strong>{entry[0]}</strong>
-          <span>{entry[1]}</span>
-        </div>
-      </details>
+      <Hint>
+        Здесь юнит — небольшая тема, модуль — набор юнитов. Балл и попытка
+        описывают результат; они не являются частями учебного содержания. PR —
+        термин GitHub, в двух контурах GitLab используется MR.
+      </Hint>
     </>
   );
 }

@@ -185,6 +185,7 @@ export function Graph({
                   {lines.map((line, index) => (
                     <tspan key={index} x={mx} dy={index ? 13 : 0}>
                       {line}
+                      {index < lines.length - 1 ? " " : ""}
                     </tspan>
                   ))}
                 </text>

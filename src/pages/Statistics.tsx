@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ArrowRight, Check, GitBranch } from "lucide-react";
 import type { CourseMode, Learner } from "../lab";
-import { fmt, learnersFor, metrics, modes } from "../lab";
+import { fmt, metrics, modes } from "../lab";
 import {
   Block,
   Flow,
@@ -10,6 +10,14 @@ import {
   Hint,
   Section,
 } from "../components/Diagram";
+
+import {
+  acceptPractice,
+  critical,
+  latestVersion,
+  taskKind,
+  type Card,
+} from "../platform";
 
 const statusLabels = {
   accepted: "Принято",
@@ -20,46 +28,53 @@ const statusLabels = {
 export default function Statistics({
   mode,
   setMode,
+  cards,
+  detail,
+  onChange,
 }: {
   mode: CourseMode;
   setMode: (m: CourseMode) => void;
+  cards: Card[];
+  detail: string;
+  onChange: (card: Card) => void;
 }) {
-  const [scope, setScope] = useState<"student" | "group">("student"),
+  const [scope, setScope] = useState<"student" | "group" | "course">("student"),
     [group, setGroup] = useState("A"),
-    [student, setStudent] = useState("S-1");
+    [student, setStudent] = useState(
+      cards.some((c) => c.learner.id === detail) ? detail : "S-1",
+    );
   const [status, setStatus] = useState("all"),
     [metric, setMetric] = useState("progress"),
     [sort, setSort] = useState("id");
-  const [acceptedMr, setAcceptedMr] = useState(false),
-    [linked, setLinked] = useState(false);
+  const [linked, setLinked] = useState(false);
   const config = modes.find((m) => m.id === mode)!;
-  const all = useMemo(() => learnersFor(mode), [mode]);
-  const data: Learner[] = all.map((l) =>
-    mode === "java" && l.id === "S-1" && acceptedMr
-      ? {
-          ...l,
-          tasks: l.tasks.map((t) =>
-            t.id === "TASK-21"
-              ? { ...t, status: "accepted" as const, score: null }
-              : t,
-          ),
-        }
-      : l,
-  );
-  const activeScope = config.groups ? scope : "student";
+  const data: Learner[] = cards.map((c) => c.learner);
+  const acceptedMr =
+    data[0].tasks.find((t) => t.id === "TASK-21")?.status === "accepted";
+  const activeScope = !config.groups && scope === "group" ? "student" : scope;
   const current = data.find((l) => l.id === student) ?? data[0];
   const selection =
     activeScope === "student"
       ? [current]
-      : data.filter((l) => l.group === group);
+      : activeScope === "course"
+        ? data
+        : data.filter((l) => l.group === group);
   const m = metrics(selection);
+  const mixedRubrics =
+    new Set(
+      selection.map((l) => (l.version < 3 ? "assessment@1" : "assessment@2")),
+    ).size > 1;
+  const currentCard = cards.find((c) => c.learner.id === current.id)!;
+  const selectedCards = cards.filter((c) =>
+    selection.some((l) => l.id === c.learner.id),
+  );
   const tasks = selection
     .flatMap((l) =>
       l.tasks.map((t) => ({
         ...t,
         learner: l.name,
         learnerId: l.id,
-        plan: `v${l.version} / R1`,
+        plan: `v${l.version} / R${cards.find((c) => c.learner.id === l.id)!.revision}`,
       })),
     )
     .filter((t) => status === "all" || t.status === status)
@@ -84,7 +99,7 @@ export default function Statistics({
     [
       "score",
       "Средняя оценка",
-      fmt(m.score, "%"),
+      mixedRubrics ? "По версиям" : fmt(m.score, "%"),
       `${m.graded} оценённых из ${selection.flatMap((l) => l.tasks.filter((t) => t.required)).length} назначений`,
     ],
     ["review", "На проверке", `${m.review}`, `${m.submitted} задач сданы`],
@@ -92,9 +107,15 @@ export default function Statistics({
       ? [
           [
             "version",
-            "Закреплённая версия",
-            `v${current.version}`,
-            "новый релиз её не меняет",
+            activeScope === "student"
+              ? "Закреплённая версия"
+              : "Критичные версии",
+            activeScope === "student"
+              ? `v${current.version}`
+              : `${selectedCards.filter(critical).length}`,
+            activeScope === "student"
+              ? "новый релиз её не меняет"
+              : "по манифесту курса",
           ],
         ]
       : [["due", "Просрочено", `${m.backlog}`, "срок прошёл, результата нет"]]),
@@ -118,7 +139,9 @@ export default function Statistics({
     score: [
       "Баллы / максимум каждой оценённой задачи",
       `${m.graded} оценённых назначений`,
-      "Среднее нормированных оценок. Нет оценки — не ноль. Покрытие показано отдельно.",
+      mixedRubrics
+        ? "В выборке разные критерии. Средние показываем отдельно по версии, общего числа нет."
+        : "Среднее нормированных оценок по совместимым критериям. Нет оценки — не ноль.",
     ],
     review: [
       `Сдано: ${m.submitted}`,
@@ -131,8 +154,12 @@ export default function Statistics({
       "Неизвестные результаты не записываем автоматически в просрочку. Они видны отдельно.",
     ],
     version: [
-      `Начал на v${current.version}`,
-      `План R1 ссылается на v${current.version}`,
+      activeScope === "student"
+        ? `Закреплено v${current.version}`
+        : `Критично устарели: ${selectedCards.filter(critical).length}`,
+      activeScope === "student"
+        ? `Трек R${currentCard.revision} ссылается на v${current.version}`
+        : `Всего карточек: ${selection.length}`,
       "Изменить можно только явной миграцией.",
     ],
     gitlab: [
@@ -159,7 +186,6 @@ export default function Statistics({
               setMode(c.id);
               setStatus("all");
               setMetric("progress");
-              setAcceptedMr(false);
               setLinked(false);
             }}
             className={mode === c.id ? "selected" : ""}
@@ -186,6 +212,13 @@ export default function Statistics({
           >
             Группа
           </button>
+          <button
+            aria-pressed={activeScope === "course"}
+            className={activeScope === "course" ? "selected" : ""}
+            onClick={() => setScope("course")}
+          >
+            Курс
+          </button>
         </div>
         {activeScope === "student" ? (
           <label>
@@ -206,7 +239,7 @@ export default function Statistics({
               ))}
             </select>
           </label>
-        ) : (
+        ) : activeScope === "group" ? (
           <label>
             Группа
             <select
@@ -218,6 +251,8 @@ export default function Statistics({
               <option>B</option>
             </select>
           </label>
+        ) : (
+          <strong>Весь курс · {data.length} студентов</strong>
         )}
         <span className="demo-badge">DEMO · срез на 16.10.2026, 12:00 UTC</span>
       </div>
@@ -236,16 +271,96 @@ export default function Statistics({
         <strong>
           План{" "}
           {activeScope === "student"
-            ? `${current.version} / R1`
+            ? `${current.version} / R${currentCard.revision}`
             : "каждого студента"}
         </strong>
         <span>→</span>
         <strong>
           {activeScope === "student"
             ? current.name
-            : `Группа ${group} · ${selection.length} студента`}
+            : activeScope === "course"
+              ? `Курс · ${selection.length} студентов`
+              : `Группа ${group} · ${selection.length} студента`}
         </strong>
       </div>
+      <Section
+        number="К"
+        title={
+          activeScope === "student"
+            ? "Карточка студента в БД"
+            : "Версии и треки выбранной выборки"
+        }
+      >
+        <div className="version-summary" data-testid="student-card">
+          <div>
+            <span>Закрепление</span>
+            <strong>
+              {activeScope === "student"
+                ? `v${current.version} · R${currentCard.revision}`
+                : `${selection.length} карточек`}
+            </strong>
+            <small>
+              {activeScope === "student"
+                ? currentCard.trackSource
+                : "Прогресс — по личному треку каждого"}
+            </small>
+          </div>
+          <div className={selectedCards.some(critical) ? "critical-state" : ""}>
+            <span>По манифесту · актуальная v{latestVersion}</span>
+            <strong>
+              {selectedCards.filter(critical).length} требуют решения
+            </strong>
+            <small>Критичное отличие, а не количество релизов</small>
+          </div>
+          <div>
+            <span>История</span>
+            <strong>
+              {selectedCards.reduce((n, c) => n + c.audit.length, 0)} решений
+            </strong>
+            <a
+              href={
+                activeScope === "student"
+                  ? `#versions/${current.id}`
+                  : "#versions"
+              }
+            >
+              Сравнить и перенести версию →
+            </a>
+          </div>
+        </div>
+        <div className="automation-grid">
+          {["Теория", "Практика", "Тест"].map((kind) => {
+            const kindMetrics = metrics(
+              selection.map((l) => ({
+                ...l,
+                tasks: l.tasks.filter((t) => taskKind(t) === kind),
+              })),
+            );
+            return (
+              <Block
+                key={kind}
+                title={kind}
+                sub={`${kindMetrics.accepted} / ${kindMetrics.total} назначенного веса принято`}
+                tone={kind === "Тест" ? "blue" : ""}
+              />
+            );
+          })}
+        </div>
+        {mixedRubrics && (
+          <Hint>
+            Оценки по разным критериям не объединяем.{" "}
+            {Array.from(new Set(selection.map((l) => l.version)))
+              .sort()
+              .map(
+                (v) =>
+                  `v${v}: ${fmt(metrics(selection.filter((l) => l.version === v)).score, "%")}`,
+              )
+              .join(" · ")}
+            . Прогресс объединяется как сумма принятых весов / сумма назначенных
+            весов.
+          </Hint>
+        )}
+      </Section>
       <div className="metric-grid">
         {metricCards.map(([id, label, value, caption]) => (
           <button
@@ -350,16 +465,19 @@ export default function Statistics({
         title={
           activeScope === "student"
             ? "Задачи этого студента"
-            : "Развёртка группы по студентам"
+            : activeScope === "course"
+              ? "Весь курс по студентам"
+              : "Развёртка группы по студентам"
         }
       >
-        {activeScope === "group" && (
+        {activeScope !== "student" && (
           <div className="table-scroll">
             <table>
               <thead>
                 <tr>
                   <th>Студент</th>
-                  <th>План</th>
+                  <th>Версия / трек</th>
+                  <th>Совместимость</th>
                   <th>Принято / назначено</th>
                   <th>Прогресс</th>
                   <th>Действие</th>
@@ -371,7 +489,19 @@ export default function Statistics({
                   return (
                     <tr key={l.id}>
                       <td>{l.name}</td>
-                      <td>v{l.version} / R1</td>
+                      <td>
+                        v{l.version} / R
+                        {cards.find((c) => c.learner.id === l.id)!.revision}
+                      </td>
+                      <td>
+                        <span
+                          className={`badge ${critical(cards.find((c) => c.learner.id === l.id)!) ? "red" : "blue"}`}
+                        >
+                          {critical(cards.find((c) => c.learner.id === l.id)!)
+                            ? "Нужен переход"
+                            : "Актуальна"}
+                        </span>
+                      </td>
                       <td>
                         {v.accepted} / {v.total}
                       </td>
@@ -443,7 +573,7 @@ export default function Statistics({
                   <td>
                     <strong>{t.id}</strong>
                     <small>
-                      {activeScope === "group" ? t.learner : t.plan}
+                      {activeScope !== "student" ? t.learner : t.plan}
                     </small>
                   </td>
                   <td>{t.required ? "Обязательно" : "Дополнительно"}</td>
@@ -469,7 +599,7 @@ export default function Statistics({
                       aria-label={`Цепочка ${t.learner} ${t.id}`}
                       onClick={() => {
                         setSelectedTask(t.id);
-                        if (activeScope === "group") {
+                        if (activeScope !== "student") {
                           setStudent(t.learnerId);
                           setScope("student");
                         }
@@ -498,7 +628,7 @@ export default function Statistics({
                 title={t.id}
                 sub={
                   t.required
-                    ? "Входит в план R1"
+                    ? `Входит в трек R${currentCard.revision}`
                     : "Дополнительная, вне знаменателя"
                 }
               />,
@@ -601,14 +731,13 @@ export default function Statistics({
             <button
               className="button primary"
               disabled={!linked || acceptedMr}
-              onClick={() => setAcceptedMr(true)}
+              onClick={() => onChange(acceptPractice(cards[0], "TASK-21"))}
             >
               {acceptedMr ? "Работа принята" : "2. Принять работу"}
             </button>
             <button
               className="link-button"
               onClick={() => {
-                setAcceptedMr(false);
                 setLinked(false);
               }}
             >
@@ -625,7 +754,7 @@ export default function Statistics({
           <div className="local-message" role="status">
             <Check size={16} />
             Прогресс Студента 01: {fmt(metrics([data[0]]).percent, "%")}. Демо
-            меняет только память страницы.
+            обновляет общую карточку до перезагрузки сайта.
           </div>
         </Section>
       )}

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import type { CourseMode } from "./lab";
 import { modes } from "./lab";
+import { createPlatform, type Card } from "./platform";
 import Foundations from "./pages/Foundations";
 import Ecosystems from "./pages/Ecosystems";
 import DataFlow from "./pages/DataFlow";
@@ -86,6 +87,13 @@ export default function App() {
     window.addEventListener("hashchange", handler);
     return () => window.removeEventListener("hashchange", handler);
   }, []);
+  const [platform, setPlatform] = useState(createPlatform);
+  const updateCard = (card: Card) =>
+    setPlatform((p) => ({
+      ...p,
+      [mode]: p[mode].map((c) => (c.learner.id === card.learner.id ? card : c)),
+    }));
+  const cards = platform[mode];
   const index = pages.findIndex((p) => p.id === route.page);
   useEffect(() => {
     document.title = `${pages[index].title} — Learning Atlas`;
@@ -185,13 +193,27 @@ export default function App() {
             <span>Модель для обсуждения · DEMO</span>
             <small>Источники не подключены. Все примеры синтетические.</small>
           </div>
-          <div key={route.page}>
+          <div key={`${route.page}-${mode}`}>
             {route.page === "concepts" && <Foundations detail={route.detail} />}
             {route.page === "ecosystems" && <Ecosystems mode={mode} />}
-            {route.page === "data" && <DataFlow mode={mode} />}
-            {route.page === "versions" && <Versions />}
+            {route.page === "data" && (
+              <DataFlow mode={mode} card={cards[0]} onChange={updateCard} />
+            )}
+            {route.page === "versions" && (
+              <Versions
+                cards={cards}
+                detail={route.detail}
+                onChange={updateCard}
+              />
+            )}
             {route.page === "statistics" && (
-              <Statistics mode={mode} setMode={setMode} />
+              <Statistics
+                mode={mode}
+                setMode={setMode}
+                detail={route.detail}
+                cards={cards}
+                onChange={updateCard}
+              />
             )}
             {route.page === "mvp" && <Roadmap />}
           </div>
@@ -220,7 +242,9 @@ export default function App() {
           <footer>
             <span>Learning Atlas · от учебной задачи к проверяемому числу</span>
             <details>
-              <summary>Исходные материалы</summary>
+              <summary>
+                Исходные материалы · архив первоначального проекта
+              </summary>
               <div>
                 {[
                   ["Архитектура", "01-architecture.md"],
