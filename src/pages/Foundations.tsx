@@ -11,6 +11,58 @@ import {
 } from "../components/Diagram";
 import type { GraphEdge, GraphNode } from "../components/Diagram";
 
+const dictionaryOrder = [
+  "content-unit",
+  "task",
+  "assessment",
+  "task-version",
+  "content-version",
+  "assessment-version",
+  "artifact",
+  "grade-item",
+  "attempt",
+  "submission",
+  "evidence",
+  "result",
+  "assignment",
+  "moodle-assignment",
+  "curriculum",
+  "curriculum-version",
+  "learning-plan",
+  "plan-revision",
+  "manifest",
+  "version-lock",
+  "program",
+  "course",
+  "enrollment",
+  "learning-instance",
+  "group",
+  "metric-version",
+  "metric-snapshot",
+  "provenance",
+  "pace",
+  "data-health",
+  "version-health",
+  "connector",
+  "snapshot",
+  "registry",
+  "identity",
+  "reconciliation",
+  "review",
+  "matching-rule",
+  "legacy-builder",
+  "runtime",
+  "resolver",
+  "migration",
+  "carry-over",
+  "reassess",
+  "supplement",
+  "retired",
+];
+const orderedTerms = [...terms].sort(
+  (a, b) => dictionaryOrder.indexOf(a.id) - dictionaryOrder.indexOf(b.id),
+);
+
 const levels = [
   {
     title: "Поля — маленькие значения",
@@ -466,7 +518,7 @@ export default function Foundations({ detail }: { detail: string }) {
           />
         </label>
         <div className="concept-chips">
-          {terms
+          {orderedTerms
             .filter((t) =>
               `${t.name} ${t.en}`.toLowerCase().includes(query.toLowerCase()),
             )
