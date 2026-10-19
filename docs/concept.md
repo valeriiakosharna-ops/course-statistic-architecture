@@ -93,6 +93,29 @@ Manual playback pauses until approval. Jumping ahead cannot bypass that decision
 
 Rewinding reconstructs a snapshot from the event prefix. Policy changes rebuild the current preview under that policy. Each course has an independent run, retained across chapter navigation until reload. **Open this result in statistics** explicitly copies the current simulated student record into Student 01 for that course. Reset affects only the simulation sandbox. Autoplay is opt-in, traverses every transfer, pauses for decisions and pauses when the page is hidden; diagram motion respects reduced-motion settings.
 
+## Processing visible at every event
+
+Each of the two journeys exposes a numbered execution chain for every event and a separate description for every selected transfer. This separates the carrier from execution: a job can fetch JSON over an API, validate it and store database rows; JSON itself is not an execution mechanism.
+
+| Flow                                    | Format and transport                                                            | Processing                                                                                         | AI role                                                     |
+| --------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Moodle enrollment/results → database    | Events / Web Services JSON                                                      | Intake job, ID mapping, deduplication, course result policy                                        | Deterministic                                               |
+| Moodle first start / revisit → database | Synchronous authenticated JSON request                                          | Request handler, unique pin transaction / exact pin read                                           | Deterministic                                               |
+| Sheets → database                       | Typed rows in API JSON                                                          | Scheduled sync, row revisions, activity/group IDs, UTC conversion                                  | Structured parser                                           |
+| Database → materials GitLab             | Generated `student-course-versions.json` via the protected Repository Files API | Outbox export, revision validation, acknowledgement and retry                                      | Deterministic                                               |
+| Database → Moodle                       | JSON configuration command over HTTPS                                           | Outbox worker and Moodle plugin API                                                                | Deterministic                                               |
+| Materials GitLab → Moodle               | Immutable HTML + static assets                                                  | Authenticated service selects the existing pinned build                                            | Deterministic; CI builds at publication                     |
+| Materials GitLab → database             | Tagged `manifest.json` + release API metadata                                   | CI validation/build, then separate release import job                                              | Explicit approved mappings                                  |
+| Student GitLab → database               | Webhook/REST JSON and CI artifacts                                              | MR identity/SHA mapping; test jobs; import `test-results.xml` and optional `review.json`           | Optional rubric-based code feedback                         |
+| Discord → database                      | Message JSON envelope containing text                                           | Bot ingestion, extraction/parser, schema/ID/time-zone/authority validation                         | Recommended for free text; structured commands use a parser |
+| LearningAtlas → database                | Authorized JSON command                                                         | Permission, revision and request_id checks; atomic decision/history/outbox writes where applicable | Human decision plus deterministic validation                |
+| Database internal migration             | Stored rows and imported manifest JSON                                          | Enabled policy job and atomic transaction                                                          | Deterministic                                               |
+| Database → LearningAtlas                | Report API JSON                                                                 | Serve stored snapshots; browser renders them                                                       | Upstream suggestions stay evidence                          |
+
+The Discord format selector compares two implementations without changing journey state. Both output a clarification proposal, preserve the quotation/message ID and require approval before changing a deadline. AI examples include confidence and model/prompt versions; parser examples identify the command schema. Neither branch makes a live AI call.
+
+A blocked migration labels outputs as targets after validation. Failed GitLab delivery labels the JSON projection as awaiting retry. The displayed stages describe the intended processing, without implying that a blocked transaction or failed update committed. The original JSON-only payload inspector is replaced by carrier-specific examples, including HTML and an internal transaction outline.
+
 ## Jobs, AI and human decisions
 
 - Jobs handle APIs/CSV, IDs, UTC, deduplication, formulas, manifest comparisons, explicit transfer and projection delivery.

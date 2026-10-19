@@ -17,6 +17,30 @@ import {
 } from "./platform";
 
 export type SimulationCourse = "ai" | "java";
+export type SimulationEventId =
+  | "enroll"
+  | "group-plan"
+  | "start"
+  | "pin-delivery"
+  | "theory"
+  | "quiz"
+  | "practice"
+  | "mr-submit"
+  | "moodle-link"
+  | "mr-review"
+  | "accept-practice"
+  | "discord"
+  | "confirm-deadline"
+  | "track"
+  | "track-delivery"
+  | "release-compatible"
+  | "compare-compatible"
+  | "revisit"
+  | "release-critical"
+  | "detect"
+  | "migrate"
+  | "migration-delivery"
+  | "retry";
 export type SimulationOptions = {
   migrationMode: "manual" | "automatic";
   manualApproved: boolean;
@@ -43,7 +67,7 @@ export type Transfer = {
   payload: Record<string, unknown>;
 };
 export type SimulationStep = {
-  id: string;
+  id: SimulationEventId;
   title: string;
   actor: string;
   trigger: string;
@@ -71,7 +95,7 @@ const transfer = (
 ): Transfer => ({ from, to, label, via, payload });
 const context = { student_id: "S-1", moodle_user_id: 104 };
 const event = (
-  id: string,
+  id: SimulationEventId,
   title: string,
   actor: string,
   trigger: string,
