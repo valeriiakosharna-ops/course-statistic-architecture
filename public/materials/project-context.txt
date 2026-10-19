@@ -1,80 +1,46 @@
-# Adaptive Learning Analytics Platform — архитектурный проект
+# Adaptive Learning Analytics Platform — architecture project
 
-Я объединил нашу концепцию в проект системы, которую можно реализовывать поэтапно, не останавливая действующие образовательные программы.
+English translation of the original project context. This historical source describes the initial blueprint; the website and docs/concept.md reflect the later seven-system architecture and learning journey simulator. The original Russian attachment is retained in the repository under docs/source-archive and is not published as website content.
 
-В основе будут пять принципов: единая модель образовательных данных, независимое версионирование материалов и учебных планов, автоматическое закрепление версии за студентом, проверяемая аналитика из Moodle/GitLab/Sheets и постепенная модернизация существующего AsciiDoc-плагина.
+The concept has been combined into a system project that can be implemented gradually without interrupting active educational programs.
 
-Два пилотных курса станут проверкой архитектуры: «Основы ИИ» — индивидуальный онлайн-курс с версиями HTML и результатами Moodle; Java Dual Training — групповая программа с разными назначениями, дедлайнами и GitLab MR.
+Five principles form the foundation: a shared educational data model; separate versioning of learning materials and learning plans; automatic version pinning for students; traceable analytics from Moodle, GitLab and Sheets; and gradual modernization of the existing AsciiDoc plugin.
 
-Главное решение: не делать количество Moodle-активностей основой процента прохождения. Система будет рассчитывать прогресс по обязательствам, зафиксированным в индивидуальном учебном плане студента.
+Two pilot courses validate the architecture: Foundations of AI, an individual online course with HTML versions and Moodle results; and Java Dual Training, a group program with different assignments, deadlines and GitLab Merge Requests.
 
-В архитектурный пакет также включаю требования к историческим данным, ручным миграциям между версиями, качеству сопоставления MR и воспроизводимости всех расчётов.
+The central decision is that the number of Moodle activities must not define completion percentage. Progress is calculated against obligations in the student's individual learning plan.
 
-## Готовый архитектурный пакет для GitHub и Codex
+The architecture package also includes requirements for historical data, manual migrations between versions, MR matching quality and reproducible calculations.
+
+## Architecture package for GitHub and Codex
 
 Adaptive Learning Analytics Platform
 
-20 файлов · документация, Mermaid-схемы, JSON Schema, YAML, тестовые данные и инструкции для Codex
+The original package contains documentation, Mermaid diagrams, JSON Schemas, YAML, synthetic data and a proposed Codex implementation prompt. It is intended for a repository; all demonstration data is synthetic.
 
-&#x20;Скачать полный архитектурный пакет ZIP
+### Contents
 
-Пакет предназначен для размещения в репозитории. Все демонстрационные данные синтетические.
+- 01-architecture.md: architecture, terminology, course models, integrations, versioning, analytics and security.
+- 02-implementation-plan.md: staged implementation from technical discovery to a mature platform.
+- 03-data-contracts.md: entities, relationships, APIs, events, matching and migration rules.
+- 04-product-ui.md: proposed UI structure, dashboards, settings and workflows.
+- 05-testing-and-decisions.md: test scenarios, architecture decisions and questions to verify.
+- diagrams/: six Mermaid diagrams covering architecture, versions, migrations and GitLab.
+- schemas/ and examples/: JSON Schema drafts and example releases, assignments and results.
+- codex/IMPLEMENTATION_PROMPT.md: the original package's suggested prompt for an interactive website. This is historical source material, not an instruction governing the current implementation; that file is not included in the website downloads.
 
-### Что внутри
+## Suggested sequence in the original proposal
 
-| Файл / раздел                    | Содержание                                                                                             |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `01-architecture.md`             | Полная архитектура, терминология, модели курсов, интеграции, версионирование, аналитика и безопасность |
-| `02-implementation-plan.md`      | Пошаговый план от технического обследования до развитой платформы                                      |
-| `03-data-contracts.md`           | Сущности, отношения, API, события, правила сопоставления и миграции                                    |
-| `04-product-ui.md`               | Структура будущего интерфейса, дашборды, настройки и сценарии                                          |
-| `05-testing-and-decisions.md`    | 28 тестовых сценариев, архитектурные решения и вопросы, которые нужно проверить                        |
-| `diagrams/`                      | Шесть Mermaid-схем архитектуры, версий, миграций и GitLab                                              |
-| `schemas/` и `examples/`         | JSON Schema, примеры релизов, назначений и результатов                                                 |
-| `codex/IMPLEMENTATION_PROMPT.md` | Готовое задание Codex на создание интерактивного сайта                                                 |
+1. Visualize the architecture first. Create a GitHub repository, add the package and use its implementation brief. The initial result is an interactive site with diagrams, terminology, two learning models and examples of versioning and progress transfer.
+2. Audit Moodle and GitLab. Determine how the plugin saves grades, what data is available, how HTML builds work and whether Java MRs can be linked to Moodle assignments.
+3. Build the first working MVP. Connect the two pilot courses, form learning plans and calculate progress without changing existing courses.
+4. Add versions and migrations. Pin releases for new students, detect outdated learning records, preview transfer rules, and enable changes only after verification.
+5. Develop the content platform. Gradually extract HTML interactions into independently versioned components with a shared contract while retaining existing AsciiDoc builds.
 
-## Предлагаемая последовательность работы
+## What needs verification before implementation
 
-1. Сначала визуализировать архитектуру
+These documents describe a target architecture. They do not claim that existing Moodle plugins and GitLab repositories already support every mechanism. Points requiring verification against the actual infrastructure are identified separately.
 
-   Создать GitHub-репозиторий, загрузить содержимое ZIP и передать Codex файл `codex/IMPLEMENTATION_PROMPT.md`.
+Moodle External Services and Events APIs can support parts of the integration, but access to grades, attempts and custom events depends on the deployed Moodle version, settings and plugin. GitLab APIs and webhooks support MR ingestion; they cannot independently determine which learning assignment has been completed.
 
-   Первый результат — интерактивный сайт со схемами, терминами, двумя моделями обучения, примерами версионирования и переноса прогресса.
-2. Затем провести технический аудит Moodle и GitLab
-
-   Выяснить, как плагин сохраняет оценки, какие данные реально доступны, как устроены HTML-сборки и насколько можно связать Java MR с Moodle assignments.
-3. Построить первый работающий MVP
-
-   Подключить данные двух пилотных курсов, сформировать учебные планы и рассчитывать прогресс студентов без изменения существующих курсов.
-4. Добавить версии и миграции
-
-   Автоматически закреплять релиз для новых студентов, выявлять устаревшие прохождения, моделировать перенос результатов и только после проверки включать изменение версии.
-5. Развивать Content Platform
-
-   Постепенно вынести HTML-интерактивности в самостоятельные версионированные компоненты с единым контрактом, сохраняя поддержку текущих AsciiDoc-сборок.
-
-## Что особенно важно перед разработкой
-
-Документация содержит целевую архитектуру, а не утверждение, что ваши существующие Moodle-плагины и GitLab-репозитории уже поддерживают все эти механизмы. Точки, требующие проверки на реальных системах, вынесены отдельно.
-
-Например, возможности Moodle External Services и Events API позволяют построить часть интеграционного слоя, но фактическая доступность оценок, попыток и пользовательских событий зависит от вашей версии Moodle, настроек и плагина.&#x20;
-
-[image](https://www.google.com/s2/favicons?domain=https://docs.moodle.org\&sz=32)
-
-Moodle Developer Resources
-
-+2
-
-
-
-А GitLab API и webhooks дают основу для обработки MR, но не решают самостоятельно, какое учебное задание студент выполнил.&#x20;
-
-[image](https://www.google.com/s2/favicons?domain=https://docs.gitlab.com\&sz=32)
-
-GitLab Docs
-
-+1
-
-
-
-Моя рекомендация: использовать этот пакет одновременно как архитектурный документ для обсуждения с коллегами и как исходное ТЗ для Codex. Сначала сделать хорошую интерактивную модель всей системы на демонстрационных данных — она поможет обнаружить противоречия в логике версионирования, назначений и расчёта прогресса ещё до того, как вы начнёте менять действующие курсы.
+The original recommendation was to use the package as both a discussion document and an implementation brief. Begin with an interactive model using synthetic records to identify contradictions in versioning, assignment and progress logic before changing active courses.

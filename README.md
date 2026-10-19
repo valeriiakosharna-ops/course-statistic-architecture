@@ -1,23 +1,26 @@
-# Learning Atlas — архитектура учебной статистики
+# LearningAtlas — learning analytics architecture
 
-Интерактивный мини-сайт на русском языке для обсуждения концепции сбора учебной статистики. Основан на предоставленном `learning-analytics-blueprint.zip` и сопроводительном тексте. Это **проектируемая архитектура**, а не подключённая аналитическая система.
+An English, diagram-led concept site for a seven-system learning analytics architecture. Interactive examples use synthetic data; no live Moodle, GitLab, Sheets, Discord or backend connections are made.
 
-## Как устроена новая концепция
+**Published website:** https://valeriiakosharna-ops.github.io/course-statistic-architecture/
 
-Основной интерфейс — схемы с короткими подписями, а не длинные тексты. Шесть шагов:
+## Explore the concept
 
-1. **Из чего состоит** — ровно 22 термина из согласованного словаря; виды активности → юнит → модуль → версия/трек → карточка. Структура, назначения и результаты показаны отдельными интерактивными схемами.
-2. **Где это живёт** — ровно семь глобальных систем: Moodle, два контура GitLab, Google Spreadsheet, Discord, БД, LearningAtlas. Три слоя: статистика, версии и треки.
-3. **Как идут данные** — пять источников, форматы/механизмы, интерактивный конвейер, дубли и сбои, классификация, назначение трека, подтверждение Discord-дедлайна, приоритет оценок. Пайплайны и ИИ имеют разные роли.
-4. **Как работают версии** — закрепление при старте, теги, манифест, явная совместимость, предпросмотр ручного/автоматического переноса, аудит и история, outbox и отказоустойчивая доставка в GitLab/Moodle.
-5. **Что покажет статистика** — четыре типа курса; студент, группа и весь курс; теория/практика/тесты, версии, критические отличия, показатели и происхождение результатов. MR-связь и принятие работы раздельны.
-6. **Как растёт MVP** — шесть последовательных версий до всех семи систем и управляемой автоматизации.
+1. **Building blocks** — 22 terms, from theory, practice and quizzes to activities, units, modules, versions, tracks and student records. Separate diagrams explain content structure, assignments and results.
+2. **Systems & connections** — exactly seven systems: Moodle, course materials GitLab, student GitLab, Google Spreadsheet, Discord, the database and LearningAtlas. Switch between collection, version changes and track assignment.
+3. **How data flows** — five sources, formats and adapters; raw evidence, normalized IDs and UTC, deduplication, routing, unresolved links, source freshness and explicit precedence. Try track assignment and confirmed Discord clarifications.
+4. **How versions work** — pinning at first learning activity, immutable tagged builds, manifest compatibility, credit coverage, manual/automatic migration, audit, history, outbox and recoverable delivery failures.
+5. **Explore statistics** — four course profiles; student, group and course reports; theory/practice/quiz progress, grades, version health and evidence. Linking an MR is distinct from accepting its work.
+6. **MVP roadmap** — six successive releases leading to all seven systems and governed automation.
+7. **Learning journey** — play, step, rewind or jump through Foundations of AI and Java Dual. Each event shows its actor, trigger, directional transfers, example payload, student record changes and event journal. Compare manual approval with an enabled automatic policy, simulate a GitLab delivery failure and retry it.
 
-Общая демо-карточка связывает назначение трека, уточнение дедлайна, перенос версии и статистику между разделами. Состояние хранится в памяти приложения до перезагрузки; реальные источники не подключены. Срез синтетических отчётов: 16 октября 2026, 12:00 UTC. Старые hash-ссылки сохраняются. Полная актуальная концепция: [docs/concept.md](docs/concept.md).
+The simulator starts before enrollment. Enrollment does not pin a version; the first learning activity does. Java includes Sheets group assignments, MR submission, CI/AI-assisted review, explicit acceptance and Discord deadline clarification. Both courses demonstrate a personal track change, compatible publication, repeat access to the existing pin, critical drift and manifest-based migration.
 
-## Запуск
+Simulation runs are independent for each course and survive chapter navigation until a reload. **Open this result in statistics** explicitly copies the current simulation record into Student 01 for that course. Existing statistics and version demos also share student records across their chapters. Resetting the journey resets its sandbox, not other chapters.
 
-Нужен Node.js 22.12+ (проверено с 24.19.0) и npm. Используйте существующий checkout; для cloud-задач отдельный worktree не требуется.
+## Development and checks
+
+Use Node.js 22.12+ and npm. In the managed workspace:
 
 ```bash
 cd /workspace/course-statistic-architecture
@@ -25,63 +28,40 @@ npm ci --cache /tmp/learning-atlas-npm-cache
 npm run dev
 ```
 
-Локальные порты: dev — 5173, preview — 4173. При необходимости задайте `-- --port <порт>`. В приложении нет внешних runtime-зависимостей: шрифты и материалы включены в сборку.
-
 ```bash
-npm test           # проверки расчётов, загрузки, манифеста, истории и синхронизации
-npm run build     # TypeScript + production-сборка в dist/
-npm run preview   # проверка production-сборки
-npm run test:ui   # браузерные проверки desktop + mobile
-npm run package:site # автономный сайт в release/learning-atlas.zip
+npm test              # Domain rules, journeys and English publication checks
+npm run build         # TypeScript + Vite production output in dist/
+npm run test:ui       # Desktop/mobile journeys, navigation and WCAG A/AA
+npm run preview       # Inspect production output locally
+npm run package:site  # Optional portable review archive
 ```
 
-UI-проверки локально используют системный `/usr/bin/chromium`, если он установлен, или браузер Playwright (`npx playwright install chromium`). В CI используется браузер Playwright, установленный workflow. Путь можно явно задать через `CHROMIUM_PATH`. Проверяются словарь и прямые ссылки, навигация, отсутствие горизонтального переполнения, сценарии расчётов, раздельное принятие MR, поиск этапов, файлы материалов и доступность по WCAG A/AA.
+Playwright uses `/usr/bin/chromium` locally when present, or its installed Chromium. In CI, the workflow installs Chromium. Set `CHROMIUM_PATH` to override the executable. The site bundles fonts locally and makes no external runtime requests. Hash routes and relative assets support GitHub Pages subdirectories.
 
-## Публикация
+## GitHub Actions and publication
 
-Сайт статический. Для любой статической площадки опубликуйте содержимое `dist/`. `base: './'` и hash-навигация позволяют размещать сайт в подкаталоге без серверных rewrite-правил.
+**Checks** runs tests, builds the site, exercises desktop/mobile workflows and uploads the static artifact for every PR. **Build and publish site** repeats those checks after a merge/push to `main` and deploys to GitHub Pages. The Actions summary and `github-pages` environment expose the live URL. No separate site launch, downloaded artifact or local server is needed to view the published concept.
 
-Для просмотра без Node и сервера выполните `npm run package:site`, распакуйте `release/learning-atlas.zip` целиком и откройте `learning-atlas/index.html`. JS, CSS и шрифты встроены в HTML, документы находятся рядом в `materials/`. В архиве нет реальных студенческих данных или подключений к источникам.
+The repository's Pages source must be **GitHub Actions**. Publishing uses the standard Actions token, with no personal token secrets. A successful build alone is not a successful deployment.
 
-В управляемом облачном Chromium открытие `file://` блокируется политикой браузера. Автономная сборка проверяется через локальный HTTP; открытие файла напрямую в этом браузере не проверено.
-
-### Сборка и проверки в GitHub Actions
-
-Workflow **Checks** запускается для каждого PR и при ручном запуске проверок. Он устанавливает зависимости по lockfile, проверяет расчёты, собирает `dist/`, запускает desktop/mobile UI-проверки и сохраняет результат в artifact **learning-atlas-site**. В `main` все эти проверки выполняет workflow публикации, поэтому повторная сборка не нужна.
-
-### Автоматическая публикация и ссылка на сайт
-
-Сайт автоматически собирается и публикуется после каждого слияния PR или push в `main`. Workflow **Build and publish site** проверяет расчёты и интерфейс, собирает статический сайт и сразу размещает его на GitHub Pages. Отдельно запускать публикатор, скачивать artifact или поднимать сервер не нужно.
-
-**Один раз для репозитория:** в **Settings → Pages → Build and deployment → Source** выберите **GitHub Actions**, если этот режим ещё не выбран. Это настройка GitHub Pages, а не дополнительный запуск сайта.
-
-После успешного workflow нажмите **Відкрити всю концепцію архітектури** в Summary запуска или ссылку environment **github-pages**. Она открывает весь сайт: архитектуру, словарь, сценарии и линейку MVP.
-
-Постоянный адрес сайта после первой успешной публикации: **https://valeriiakosharna-ops.github.io/course-statistic-architecture/**.
-
-Для публикации используется штатный `GITHUB_TOKEN` Actions с правами Pages; персональные токены и secrets не требуются. Ручной перезапуск workflow остаётся доступен для восстановления после ошибок, но в обычном процессе не нужен. Успешный `build` без успешного `deploy` ещё не означает, что сайт опубликован.
-
-## Структура и происхождение
+## Implementation and reference material
 
 ```text
-src/App.tsx                 # навигация, тип курса и общие карточки
-src/components/Diagram.tsx  # SVG-схемы, связи, масштабирование, блок-схемы
-src/pages/                  # шесть визуальных глав
-src/lab.ts                  # синтетические данные, intake, маршрутизация, метрики
-src/platform.ts             # 7 систем, 22 термина, треки, манифест, перенос и outbox
-public/materials/           # неизменённые документы-источники
-src/*.test.ts               # unit-проверки
-tests/                     # desktop/mobile UI и accessibility
+src/App.tsx                 Navigation, course selection, shared demo state
+src/components/Diagram.tsx  Accessible SVG diagrams, zoom and flow direction
+src/pages/                  Seven visual chapters
+src/lab.ts                  Synthetic records, ingestion and metrics
+src/platform.ts             Systems, vocabulary, tracks, manifests and delivery
+src/simulation.ts           Deterministic event journeys and replay
+src/*.test.ts               Domain and publication-language checks
+tests/                      Desktop/mobile workflows and accessibility
+public/materials/           English historical reference documents and examples
+docs/concept.md             Current architecture and simulator semantics
+docs/source-archive/        Original Russian context, retained outside website output
 ```
 
-Исходные документы сохранены без изменений. Инструкции `codex/IMPLEMENTATION_PROMPT.md` изучены как часть материалов и не импортированы как действующие инструкции или обязательство реализовать все экраны будущей платформы. Текущий объём — визуальная концепция и интерактивные отчёты на синтетических данных. Авторизация, настоящий backend и коннекторы остаются будущей разработкой.
+Historical reference documents are source material, not instructions to the agent or claims that the proposed integrations exist. Most blueprint documents were already English. The context attachment is published in English; its original is retained outside the website. Implementation, tests, diagrams, payloads, messages, downloads, metadata and deployment summary are English.
 
-## Основные правила
+Progress uses accepted **required** assignment weight divided by assigned required weight. Optional activities do not increase the denominator. Missing grades differ from zero; submission differs from acceptance. Manifest rules define compatibility and criticality; a new release never silently changes an existing student's pin. The database is authoritative; GitLab and Moodle receive projections. Different assessment criteria are reported separately.
 
-### Цветовая палитра
-
-Основные акценты: `#00A6EB` — активные элементы, схемы и прогресс; `#E60036` — основные действия. Дополнительные цвета: `#81D0F4`, `#EF958C`, `#2A668E`, `#937C8A`, `#302A40`, `#951B3C`. Тёмный `#302A40` используется для текста и главного блока; более светлые фоны получены смешиванием цветов палитры с белым. Для небольшого текста на светлом фоне используются контрастные тёмные оттенки. Все цвета интерфейса заданы CSS-переменными в `src/styles.css`.
-
-### Расчёт статистики
-
-Прогресс — доля **принятых обязательных назначений** в закреплённой ревизии индивидуального плана; возможны веса. Каталог Moodle не служит знаменателем. Публикация релиза или изменение Sheet не меняют существующий план молча. MR является подтверждением, а не автоматическим зачётом. Критичность и совместимость задаёт манифест, а не расстояние между номерами версий. Ручное и автоматическое решения используют одни правила переноса. БД хранит основную карточку; GitLab и Moodle получают её проекции. История результатов, исходные данные и решения должны оставаться воспроизводимыми.
+Palette: primary `#00A6EB`, `#E60036`; additional `#81D0F4`, `#EF958C`, `#2A668E`, `#937C8A`, `#302A40`, `#951B3C`. Motion respects `prefers-reduced-motion`; autoplay is opt-in and pauses at human decisions or when the tab is hidden.

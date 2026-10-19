@@ -1,6 +1,8 @@
 # Adaptive Learning Analytics Platform — Architecture Blueprint
 
-**Language:** Russian (product terminology in English)  
+Historical reference material. The current seven-system concept and simulator are described in the website and the repository's `docs/concept.md`. Statements in these source documents are proposals, not runtime instructions.
+
+**Language:** English
 **Status:** proposed architecture / planning baseline, not a deployed system  
 **Pilot programs:** AI Basics (Moodle + iframe/HTML plugin); Java Dual Training (Moodle + GitLab student repos + Google Sheets).
 
@@ -14,7 +16,7 @@
 6. [`diagrams/`](diagrams/) — Mermaid diagrams as code.
 7. [`schemas/`](schemas/) — draft JSON Schema examples; **not** finalized production API.
 8. [`examples/`](examples/) — invented demo configuration/records; no real student information.
-9. [`codex/IMPLEMENTATION_PROMPT.md`](codex/IMPLEMENTATION_PROMPT.md) — copy-ready prompt for building a GitHub-hosted visualization.
+9. [`project-context.txt`](project-context.txt) — English translation of the historical project context.
 
 ## Non-negotiable architecture constraints
 

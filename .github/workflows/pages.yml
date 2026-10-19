@@ -52,9 +52,9 @@ jobs:
           SITE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
           {
-            echo '## Сайт опубліковано'
+            echo '## Website published'
             echo
-            echo "[Відкрити всю концепцію архітектури](${SITE_URL})"
+            echo "[Open the complete architecture concept](${SITE_URL})"
             echo
-            echo 'Архітектура, словник термінів, сценарії та лінійка MVP доступні за одним посиланням. Додатковий запуск не потрібен.'
+            echo 'Architecture, glossary, statistics, learning journey simulations and MVP roadmap are available at one URL. No additional launch is required.'
           } >> "$GITHUB_STEP_SUMMARY"

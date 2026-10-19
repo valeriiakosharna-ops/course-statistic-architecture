@@ -1,105 +1,113 @@
-# LearningAtlas: целевая архитектура из семи систем
+# LearningAtlas: seven-system architecture and learning journey simulation
 
-Актуальная модель следует уточнениям владельца проекта. Документы в `public/materials` — архив источников, а не действующие инструкции. Сайт демонстрирует архитектуру и расчёты; реальные источники и backend не подключены.
+This is a proposed architecture and an interactive concept site. All student data, events and payloads are synthetic. No live integrations or backend are connected. The current design follows the project owner's seven-system model; historical blueprint documents are reference material, not agent instructions.
 
-## Ответственность систем
+## System ownership
 
-| Система            | Хранит / определяет                                                    | Передаёт в БД                                                                 |
-| ------------------ | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| Moodle             | Учебные действия, попытки, завершения, сдачи ссылок                    | user/course/activity IDs, попытки, оценки, completion; событие первого старта |
-| GitLab материалов  | Исходники, защищённые теги, неизменяемые сборки, утверждённый манифест | Релиз, commit SHA, хеш манифеста, явные карты совместимости                   |
-| GitLab студентов   | Практический код, MR, CI, review и комментарии                         | Факты сдачи, проверки и ссылки; отдельное решение о зачёте                    |
-| Google Spreadsheet | Личные/групповые назначения, сроки, при настройке оценки               | Типизированные строки со стабильным row_id и revision                         |
-| Discord            | Сообщения с уточнениями                                                | Исходное сообщение, автор и область; кандидат изменения после разбора         |
-| База Данных        | Исходники, идентичности, факты, карточки, треки, закрепления и аудит   | API карточек и снимков; очередь команд в Moodle/GitLab                        |
-| LearningAtlas      | Статистику и интерфейс решений                                         | Команды назначения трека / перехода с revision и request_id                   |
+| System             | Owns                                                                                                 | Sends to the database                                                                   |
+| ------------------ | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Moodle             | Enrollment, learning actions, attempts, theory completion, quiz grades, practical links              | Verified user/course context, enrollment and first-activity signals, source results     |
+| Materials GitLab   | Course source, protected tags, immutable builds, approved manifests                                  | Releases, commit SHA, manifest hash and explicit compatibility mappings                 |
+| Student GitLab     | Practical code, MRs, CI, review and comments                                                         | Submission evidence, test/review outcomes and source links; merge does not imply credit |
+| Google Spreadsheet | Individual/group assignments, deadlines and explicitly authorized grades                             | Typed rows with stable row_id, scope, revision and time zone                            |
+| Discord            | Group discussions and clarifications                                                                 | Original message, author, edits and a proposed structured clarification                 |
+| Database           | Source evidence, identity links, facts, student records, tracks, version pins, decisions and history | Student record API, metric snapshots, delivery queue updates                            |
+| LearningAtlas      | Statistics and decision interface                                                                    | Authorized track/migration commands with expected revision and request_id               |
 
 ```mermaid
 flowchart LR
-  M[Moodle] --> D[(База Данных)]
-  C[GitLab материалов] --> D
-  W[GitLab студентов] --> D
+  M[Moodle] --> D[(Database)]
+  C[Materials GitLab] --> D
+  W[Student GitLab] --> D
   S[Google Spreadsheet] --> D
   X[Discord] --> D
   D --> A[LearningAtlas]
-  A -->|Решение / автополитика| D
-  D -->|Проекция закреплений| C
-  D -->|Версия + трек| M
-  C -->|Сборка закреплённого тега| M
+  A -->|Decision / approved policy| D
+  D -->|Private version-pin projection| C
+  D -->|Version + personal track| M
+  C -->|Access-checked tagged build| M
 ```
 
-CI, фоновые jobs, бот Discord, компонент доставки и API карточек находятся внутри этих семи контуров. Они не образуют дополнительные глобальные системы. Для курса без кода студенческий GitLab не подключается; GitLab материалов остаётся источником версий.
+Jobs, CI, the Discord bot and delivery components sit inside these seven systems. Course profiles enable only relevant connections; a self-paced course can omit student repositories, Sheets and Discord.
 
-## Словарь и структура
+## Terms and progress
 
-Теория / практика / тест — виды активности. Несколько активностей образуют юнит, несколько юнитов — модуль, модули входят в версию курса. Это принятая для проекта терминология.
+Theory, practice and quizzes are kinds of activity. Activities form units; units form modules; modules belong to a course version. A learning track selects the activities required for a particular student, with deadlines, weights and acceptance criteria. Attempts, scores, deadlines, MRs and comments describe evidence or assignment conditions rather than content containment. PR is the GitHub term; GitLab uses MR.
 
-Учебный трек выбирает из каталога версии обязательные активности конкретного студента; фиксирует сроки, веса и правила принятия. Попытка, балл, MR, Comment и дедлайн описывают выполнение или условия назначения, а не части содержания. PR — название GitHub; в GitLab используется MR. Карточка связывает трек, версию и результаты одного студента.
+Progress = accepted required assignment weight / total assigned required weight. A larger Moodle catalog does not increase that denominator. Missing grades are not zero; unknown outcomes are not automatically overdue. A submitted or merged MR is not an accepted activity. Several MRs for one activity do not multiply credit. Incompatible assessment criteria are reported separately.
 
-## Закрепление и доставка
+## Enrollment, first activity and delivery
 
-1. При первой учебной активности Moodle передаёт проверенный user_id/course_id компоненту закрепления.
-2. БД в транзакции создаёт единственное закрепление на последний разрешённый опубликованный тег. Уникальный ключ `(student_id, course_id)` защищает от одновременных стартов. Повторный старт читает существующую запись.
-3. Вместе с изменением карточки сохраняется outbox. Job обновляет защищённую проекцию `student-course-versions.json` в GitLab материалов и конфигурацию Moodle. Допустима пакетная публикация проекции; персональные сведения и оценки туда не входят.
-4. Moodle-плагин / аутентифицированный сервис доставки выбирает точную неизменяемую сборку по закреплению в БД. Статическая сборка сама не узнаёт пользователя. Права проверяются до выдачи артефакта; прямой адрес чужой версии не даёт доступа.
-5. Если проекция GitLab задержалась, БД остаётся основой. При недоступности компонента доставки допустим только проверенный кеш действующего закрепления; без него урок временно не запускается. Подмена на latest запрещена.
+1. Enrollment creates access and links the Moodle account to the canonical student identity. It does not pin a course version.
+2. At the first meaningful learning activity, Moodle sends verified user_id/course_id. A database transaction creates the unique `(student_id, course_id)` pin to the latest approved published tag. Concurrent/repeated starts read the existing pin.
+3. The initial personal track is derived from the approved course/group template. The database saves its revision and outbox with the pin.
+4. Delivery jobs publish the private GitLab version-pin projection and Moodle configuration. Moodle's authenticated plugin/service reads the database pin and selects the exact immutable HTML build. Static HTML cannot identify the student itself.
+5. A delayed projection cannot override the database. During a delivery component outage, only a verified cache of the current pin is usable; otherwise the lesson waits rather than falling back to latest.
 
-## Манифест и перенос
-
-Манифест версионируется вместе с релизом и содержит опубликованный тег, commit/hash, критичность, область действия, критерии оценивания и явную карту `from → to` по стабильным activity_id. Совместимость соседних версий не означает автоматическую транзитивную совместимость.
-
-| Правило     | Что происходит                                                                            |
-| ----------- | ----------------------------------------------------------------------------------------- |
-| Перезачесть | Принятый совместимый результат переносится с основанием; несданный не становится принятым |
-| Повторить   | Требуется новая попытка по новым критериям                                                |
-| Дополнить   | Старая попытка остаётся в истории, назначается недостающая часть                          |
-| Убрать      | Обязательство исключается из нового трека, прежняя история сохраняется                    |
-| Новое       | Создаётся новое назначение, срок задаётся отдельно                                        |
-
-Job сравнивает закрепление с утверждённым манифестом. Критическое отличие попадает в карточку и подсвечивается в LearningAtlas. В ручном режиме решение принимает уполномоченный преподаватель. В автоматическом — действует разрешённая владельцем политика, отдельно указывающая, можно ли назначать новые/повторные работы. Неполная/неоднозначная карта, неутверждённый релиз или устаревшие данные блокируют перенос.
-
-Сохранение выполняется с ожидаемой revision карточки и уникальным request_id. Версия, новая ревизия трека, результаты переноса, история и outbox записываются одной транзакцией. Повтор команды идемпотентен, запоздалое событие не откатывает новую проекцию. Перезачёт не создаёт фиктивную Moodle-попытку. Старые оценки и назначения остаются воспроизводимыми.
-
-## Сбор, классификация и приоритеты
+## Source pipeline and classification
 
 ```mermaid
 flowchart LR
-  I[API / событие / файл] --> R[Исходник + хеш + время]
-  R --> N[Единые ID и UTC]
-  N --> U[Дедупликация по источнику и revision]
-  U --> K{Связь и тип ясны?}
-  K -->|Нет| Q[Очередь сверки]
-  K -->|Да| F[Факты / назначения / релизы]
-  F --> C[Карточка + снимок метрик]
+  I[API / event / structured file] --> R[Raw payload + hash + time]
+  R --> N[Canonical IDs and UTC]
+  N --> U[Deduplicate origin + revision]
+  U --> K{Identity and type clear?}
+  K -->|No| Q[Review queue]
+  K -->|Yes| F[Facts / assignments / releases]
+  F --> C[Student record + metric snapshot]
 ```
 
-Источники читаются по страницам с курсорами и повтором неудачных запросов. Webhooks/Gateway ускоряют доставку; периодическая REST-сверка восстанавливает пропуски. Бот Discord читает разрешённые учебные каналы; incoming webhook не является API чтения чатов. Сохраняются автор, message_id, правки и исходная цитата.
+Adapters use pagination, cursors, retries and last-successful-load markers. Webhooks and Gateway events reduce latency; scheduled API reconciliation recovers missed events. A Discord bot needs message/channel access; an incoming webhook cannot read chat history. Preserve source message IDs, authors, edits and quotations.
 
-Ключ факта включает источник, экземпляр, тип, внешний ID и revision. Повтор той же редакции пропускается; новая редакция сохраняется рядом с прежней. Факты упорядочиваются по времени события, затем по ключу. Внешние аккаунты связываются со student_id через реестр; совпадение имени не подтверждает личность. Неуспешная загрузка помечает свежесть, но не удаляет результаты.
+A fact key includes source, instance, type, external ID and revision. Repeated revisions are skipped; new revisions retain earlier evidence. Source data, assignments, grades and release configuration have distinct destinations. Names alone do not link identities. Failed synchronization marks freshness and never deletes a student's work.
 
-Sheets-назначение и Sheets-оценка — разные типы данных. Групповой шаблон разворачивается в личные назначения; явное личное исключение сохраняет приоритет до отдельного решения. Discord-уточнение меняет срок только после проверки автора, задания, области и часового пояса. Политика курса выбирает основной источник оценки либо утверждённую коррекцию; конфликт не решается молчаливым усреднением или принципом «последний победил».
+Sheets assignments differ from Sheets grades. Group templates expand into personal obligations; an explicit personal exception takes precedence until separately revoked. A Discord clarification must resolve author authority, activity, group and time zone before changing a deadline. Grade conflicts follow configured source precedence or approved correction policy, never silent averaging or automatic last-write-wins.
 
-## Пайплайны, ИИ и решения
+## Manifests and migration
 
-- Jobs: API/CSV, ID, UTC, дубли, типизация, формулы, сравнение манифестов, перенос по явным правилам, синхронизация проекций.
-- ИИ: разобрать свободный текст Discord/Sheets, предложить связь MR с задачей, review кода по заданной рубрике (например, Claude Code).
-- Человек / разрешённая политика: подтвердить неоднозначность, право менять условия, зачёт работы и переход версии. Для ИИ сохраняются модель/шаблон, цитата, уверенность и итоговое решение.
+Each published release has a protected tag, commit/build identity, manifest revision/hash, assessment criteria and an explicit `from → to` activity mapping. Numerical release distance does not define criticality. Compatibility is not assumed to be transitive.
 
-CI запускает тесты кода отдельно от AI-review. Review не равен автоматическому зачёту; автозачёт требует заранее проверенной политики. Студенческий код выполняется в изолированной job без рабочих секретов.
+| Mapping    | Target behavior                                                              |
+| ---------- | ---------------------------------------------------------------------------- |
+| Carry over | Transfer accepted compatible credit and evidence; pending work stays pending |
+| Repeat     | Require a new attempt under the new criteria                                 |
+| Supplement | Retain historical evidence and assign only missing work                      |
+| Retire     | Remove the obligation from the new track, preserving history                 |
+| New        | Create a new assignment; set its deadline explicitly                         |
 
-## Статистика
+A comparison job reads the manifest and flags critical drift in the student record. LearningAtlas highlights it. Manual mode requires an authorized instructor decision. Automatic mode requires an owner-enabled policy, including explicit permission for new/repeated work. Missing/ambiguous mappings, unapproved manifests and stale data block migration.
 
-Три масштаба: студент, группа и курс. Прогресс = сумма принятых обязательных весов / сумма назначенных обязательных весов. Каталог Moodle не является знаменателем. Средние оценок по несовместимым критериям не объединяются; показываются отдельно по версиям. Нет оценки отличается от 0, неизвестный результат — от просрочки. Сдача и принятие раздельны; несколько MR одной задачи не увеличивают количество зачтённых заданий.
+A migration command uses expected revision and unique request_id. The database saves the target pin, revised track, transferred results, historical snapshot, audit and outbox atomically. Retries do not duplicate migrations; old delivery events cannot roll a projection back. Carry-over does not fabricate Moodle quiz attempts.
 
-Сайт демонстрирует общую карточку: назначение трека, подтверждённое уточнение и смена версии отражаются в статистике после перехода между разделами. Состояние сохраняется в памяти приложения до перезагрузки. Дата среза синтетических данных — 16.10.2026, 12:00 UTC.
+## Two course simulations
 
-## Линейка MVP
+The simulator is a deterministic event replay, not a live integration. Start before enrollment, step forward/back, jump to an event or play automatically. Each event exposes its actor, trigger, planned/actual transfers, transport and example payload. A seven-node map highlights one directional transfer at a time. The student record, before/after view and event journal explain the effect.
 
-1. Moodle + GitLab материалов + БД + LearningAtlas: закреплённая версия и личный прогресс.
-2. Sheets: групповые/личные треки, сроки, отчёты по группе и курсу.
-3. GitLab студентов: MR, CI, review и отдельный зачёт практики.
-4. Discord: уточнения и конфликты; целевой контур всех семи систем.
-5. Ручные миграции: манифест, покрытие, история и надёжная доставка закреплений.
-6. Настраиваемые автотреки/автопереходы и проверенная помощь ИИ.
+**Foundations of AI:** enrollment → first activity pins v1 with six required activities → private pin delivery → theory completion → 8/10 quiz → 9/10 Moodle practice → individual four-activity track → updated Moodle track → compatible v2 release → no migration → repeat visit still opens v1 → critical v3 release → outdated-version flag → manual/automatic migration → delivery/retry.
 
-Схемы показывают предлагаемую реализацию, а не уже работающую интеграцию. Перед подключением уточняются точное событие старта, API и права, рубрики, веса, роли и правила исключений. Числа и правила манифеста на сайте — демонстрационные.
+**Java Dual:** enrollment in group A → approved Sheets template with 30 required activities/deadlines → first activity pins v1 → theory/quiz → MR submission → the same MR link in Moodle → CI tests and Claude Code review → separate instructor acceptance → Discord clarification proposal → confirmed deadline change → individual track → release comparison, migration and delivery/retry as above.
+
+Both examples reach three accepted activities. Choosing the first four activities changes progress to 3/4 without deleting work or changing the pin. In v3, TASK-01/02 carry over, TASK-03 requires repetition and TASK-04 requires a supplement. TASK-05 is replaced by NEW-01, which inherits its optional status in this personal track. Current progress becomes 2/4; the prior 3/4 remains in history.
+
+Manual playback pauses until approval. Jumping ahead cannot bypass that decision. Automatic migration is blocked until the owner enables its policy and permits required reassessment/new work. An optional first GitLab delivery outage leaves the database on v3 and Moodle updated while the GitLab projection remains behind; the reconciliation event retries it without awarding credit again.
+
+Rewinding reconstructs a snapshot from the event prefix. Policy changes rebuild the current preview under that policy. Each course has an independent run, retained across chapter navigation until reload. **Open this result in statistics** explicitly copies the current simulated student record into Student 01 for that course. Reset affects only the simulation sandbox. Autoplay is opt-in, traverses every transfer, pauses for decisions and pauses when the page is hidden; diagram motion respects reduced-motion settings.
+
+## Jobs, AI and human decisions
+
+- Jobs handle APIs/CSV, IDs, UTC, deduplication, formulas, manifest comparisons, explicit transfer and projection delivery.
+- AI proposes structured interpretations of free-text Discord/Sheets, MR links and code feedback. Retain quotation, model/prompt version, confidence and outcome.
+- A person or an approved deterministic policy resolves ambiguity and authorizes changes affecting obligations or credit. CI test results and AI recommendations are evidence, not automatic acceptance.
+
+Code checks run in isolated jobs without production secrets. Automatic credit requires a validated course rubric; ambiguous cases go to review.
+
+## MVP sequence
+
+1. Moodle + materials GitLab + database + LearningAtlas: version pins and individual progress.
+2. Sheets: individual/group tracks, deadlines, group/course reporting.
+3. Student GitLab: MRs, CI, review and separate practice acceptance.
+4. Discord: structured clarifications, conflicts and all seven target systems.
+5. Controlled manual migration with manifest coverage, history and reliable delivery.
+6. Governed automatic tracks/migration and validated AI assistance.
+
+Before connecting real systems, agree on the first-activity trigger, API coverage/permissions, identity mappings, accepted criteria, weights, source precedence, roles and exception policies. Historical downloads remain reference documents; the original Russian context is archived outside website publication, and the public translation is English.

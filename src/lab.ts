@@ -8,19 +8,19 @@ export const modes: {
 }[] = [
   {
     id: "ai",
-    label: "Основы ИИ",
-    short: "Самостоятельно",
-    sources: ["Moodle", "GitLab: материалы"],
+    label: "Foundations of AI",
+    short: "Self-paced",
+    sources: ["Moodle", "GitLab: materials"],
     groups: false,
   },
   {
     id: "java",
     label: "Java Dual",
-    short: "Группа + код",
+    short: "Group + code",
     sources: [
       "Moodle",
-      "GitLab: материалы",
-      "GitLab: работы",
+      "GitLab: materials",
+      "GitLab: submissions",
       "Sheets",
       "Discord",
     ],
@@ -28,22 +28,22 @@ export const modes: {
   },
   {
     id: "moodle",
-    label: "Курс в Moodle",
-    short: "Тесты и задания",
-    sources: ["Moodle", "GitLab: материалы"],
+    label: "Moodle course",
+    short: "Quizzes and assignments",
+    sources: ["Moodle", "GitLab: materials"],
     groups: true,
   },
   {
     id: "sheets",
-    label: "Moodle + таблица",
-    short: "Разные назначения",
-    sources: ["Moodle", "GitLab: материалы", "Sheets", "Discord"],
+    label: "Moodle + spreadsheet",
+    short: "Different assignments",
+    sources: ["Moodle", "GitLab: materials", "Sheets", "Discord"],
     groups: true,
   },
 ];
 export type TaskStatus = "accepted" | "review" | "todo" | "unknown";
 export type StudentTask = {
-  kind?: "Теория" | "Практика" | "Тест";
+  kind?: "Theory" | "Practice" | "Quiz";
   id: string;
   required: boolean;
   weight: number;
@@ -66,12 +66,12 @@ export type Learner = {
 export const AS_OF = "2026-10-16T12:00:00Z";
 export function learnersFor(mode: CourseMode): Learner[] {
   return [
-    "Студент 01",
-    "Студент 02",
-    "Студент 03",
-    "Студент 04",
-    "Студент 05",
-    "Студент 06",
+    "Student 01",
+    "Student 02",
+    "Student 03",
+    "Student 04",
+    "Student 05",
+    "Student 06",
   ].map((name, i) => {
     const group =
       mode === "ai" ? null : i < 3 ? ("A" as const) : ("B" as const);
@@ -112,12 +112,12 @@ export function learnersFor(mode: CourseMode): Learner[] {
               : `TASK-${String(j + 1).padStart(2, "0")}`,
           kind:
             source === "GitLab"
-              ? "Практика"
+              ? "Practice"
               : j % 3 === 0
-                ? "Теория"
+                ? "Theory"
                 : j % 3 === 1
-                  ? "Тест"
-                  : "Практика",
+                  ? "Quiz"
+                  : "Practice",
           required: j < total,
           weight: 1,
           status,
@@ -186,7 +186,7 @@ export function metrics(learners: Learner[], asOf = AS_OF) {
   };
 }
 export type Packet = {
-  source: "Moodle" | "GitLab" | "Sheets" | "GitLab: материалы" | "Discord";
+  source: "Moodle" | "GitLab" | "Sheets" | "GitLab: materials" | "Discord";
   instance: string;
   type: string;
   externalId: string;
@@ -233,7 +233,7 @@ export const packets: Packet[] = [
 ];
 packets.push(
   {
-    source: "GitLab: материалы",
+    source: "GitLab: materials",
     instance: "course-7",
     type: "course_release",
     externalId: "course-v3",
@@ -293,5 +293,5 @@ export function sortFacts(facts: Packet[]) {
 }
 export const fmt = (value: number | null, suffix = "") =>
   value === null
-    ? "Нет данных"
-    : `${new Intl.NumberFormat("ru", { maximumFractionDigits: 1 }).format(value)}${suffix}`;
+    ? "No data"
+    : `${new Intl.NumberFormat("en-GB", { maximumFractionDigits: 1 }).format(value)}${suffix}`;

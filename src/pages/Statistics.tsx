@@ -20,10 +20,10 @@ import {
 } from "../platform";
 
 const statusLabels = {
-  accepted: "Принято",
-  review: "На проверке",
-  todo: "Не сдано",
-  unknown: "Нет данных",
+  accepted: "Accepted",
+  review: "Under review",
+  todo: "Not submitted",
+  unknown: "No data",
 };
 export default function Statistics({
   mode,
@@ -92,80 +92,85 @@ export default function Statistics({
   const metricCards = [
     [
       "progress",
-      "Прогресс",
+      "Progress",
       fmt(m.percent, "%"),
-      `${m.accepted} / ${m.total} обязательного веса`,
+      `${m.accepted} / ${m.total} required weight`,
     ],
     [
       "score",
-      "Средняя оценка",
-      mixedRubrics ? "По версиям" : fmt(m.score, "%"),
-      `${m.graded} оценённых из ${selection.flatMap((l) => l.tasks.filter((t) => t.required)).length} назначений`,
+      "Average grade",
+      mixedRubrics ? "By version" : fmt(m.score, "%"),
+      `${m.graded} graded out of ${selection.flatMap((l) => l.tasks.filter((t) => t.required)).length} assignments`,
     ],
-    ["review", "На проверке", `${m.review}`, `${m.submitted} задач сданы`],
+    ["review", "Under review", `${m.review}`, `${m.submitted} tasks submitted`],
     ...(mode === "ai"
       ? [
           [
             "version",
-            activeScope === "student"
-              ? "Закреплённая версия"
-              : "Критичные версии",
+            activeScope === "student" ? "Pinned version" : "Critical versions",
             activeScope === "student"
               ? `v${current.version}`
               : `${selectedCards.filter(critical).length}`,
             activeScope === "student"
-              ? "новый релиз её не меняет"
-              : "по манифесту курса",
+              ? "a new release does not change it"
+              : "according to the course manifest",
           ],
         ]
-      : [["due", "Просрочено", `${m.backlog}`, "срок прошёл, результата нет"]]),
+      : [
+          [
+            "due",
+            "Overdue",
+            `${m.backlog}`,
+            "deadline passed, no accepted result",
+          ],
+        ]),
     ...(mode === "java"
       ? [
           [
             "gitlab",
-            "Принято из GitLab",
+            "Accepted from GitLab",
             `${m.gitlab}`,
-            "задачи, не количество MR",
+            "activities, not MR count",
           ],
         ]
       : []),
   ];
   const formulas: Record<string, [string, string, string]> = {
     progress: [
-      `Принятый вес: ${m.accepted}`,
-      `Обязательный вес плана: ${m.total}`,
-      "Делим первое на второе × 100. Не считаем весь каталог Moodle.",
+      `Accepted weight: ${m.accepted}`,
+      `Required track weight: ${m.total}`,
+      "Divide accepted by required × 100. The full Moodle catalog is not the denominator.",
     ],
     score: [
-      "Баллы / максимум каждой оценённой задачи",
-      `${m.graded} оценённых назначений`,
+      "Score / maximum for each graded activity",
+      `${m.graded} graded assignments`,
       mixedRubrics
-        ? "В выборке разные критерии. Средние показываем отдельно по версии, общего числа нет."
-        : "Среднее нормированных оценок по совместимым критериям. Нет оценки — не ноль.",
+        ? "The selection uses different rubrics. Show averages by version, without a combined grade."
+        : "Average normalized grade under compatible criteria. A missing grade is not zero.",
     ],
     review: [
-      `Сдано: ${m.submitted}`,
-      `Ожидают принятия: ${m.review}`,
-      "Сдача подтверждена, но принятого результата пока нет.",
+      `Submitted: ${m.submitted}`,
+      `Awaiting acceptance: ${m.review}`,
+      "A submission exists, but its result has not been accepted.",
     ],
     due: [
-      `Не приняты и срок прошёл: ${m.backlog}`,
-      "Только задачи с известными данными",
-      "Неизвестные результаты не записываем автоматически в просрочку. Они видны отдельно.",
+      `Unaccepted and past deadline: ${m.backlog}`,
+      "Only activities with known data",
+      "Unknown results do not automatically count as overdue. They are shown separately.",
     ],
     version: [
       activeScope === "student"
-        ? `Закреплено v${current.version}`
-        : `Критично устарели: ${selectedCards.filter(critical).length}`,
+        ? `Pinned v${current.version}`
+        : `Critically outdated: ${selectedCards.filter(critical).length}`,
       activeScope === "student"
-        ? `Трек R${currentCard.revision} ссылается на v${current.version}`
-        : `Всего карточек: ${selection.length}`,
-      "Изменить можно только явной миграцией.",
+        ? `Track R${currentCard.revision} uses v${current.version}`
+        : `Total records: ${selection.length}`,
+      "Only an explicit migration can change it.",
     ],
     gitlab: [
-      `Принято задач: ${m.gitlab}`,
-      "Считаем назначения, не MR",
-      "Несколько MR одной задачи не создают несколько зачётов.",
+      `Accepted activities: ${m.gitlab}`,
+      "Count assignments, not MRs",
+      "Several MRs for one activity do not create several credits.",
     ],
   };
   const f =
@@ -173,11 +178,11 @@ export default function Statistics({
   return (
     <>
       <Heading
-        kicker="05 / ЧТО УВИДИТ ПРЕПОДАВАТЕЛЬ"
-        title="Поменяйте курс — изменится статистика"
-        sub="Все показатели ниже считаются из демонстрационных назначений. Нажмите на число, чтобы увидеть формулу."
+        kicker="05 / THE INSTRUCTOR'S VIEW"
+        title="Change the course, explore its statistics"
+        sub="All metrics are calculated from demo assignments. Select a metric to see its formula."
       />
-      <div className="mode-cards" aria-label="Тип курса в статистике">
+      <div className="mode-cards" aria-label="Statistics course type">
         {modes.map((c) => (
           <button
             key={c.id}
@@ -196,13 +201,13 @@ export default function Statistics({
         ))}
       </div>
       <div className="report-toolbar">
-        <div className="tabs" aria-label="Масштаб отчёта">
+        <div className="tabs" aria-label="Report scope">
           <button
             aria-pressed={activeScope === "student"}
             className={activeScope === "student" ? "selected" : ""}
             onClick={() => setScope("student")}
           >
-            Студент
+            Student
           </button>
           <button
             disabled={!config.groups}
@@ -210,21 +215,21 @@ export default function Statistics({
             className={activeScope === "group" ? "selected" : ""}
             onClick={() => setScope("group")}
           >
-            Группа
+            Group
           </button>
           <button
             aria-pressed={activeScope === "course"}
             className={activeScope === "course" ? "selected" : ""}
             onClick={() => setScope("course")}
           >
-            Курс
+            Course
           </button>
         </div>
         {activeScope === "student" ? (
           <label>
-            Кто
+            Who
             <select
-              aria-label="Студент"
+              aria-label="Student"
               value={student}
               onChange={(e) => {
                 setStudent(e.target.value);
@@ -234,16 +239,16 @@ export default function Statistics({
               {data.map((l) => (
                 <option key={l.id} value={l.id}>
                   {l.name}
-                  {l.group ? ` · группа ${l.group}` : ""}
+                  {l.group ? ` · group ${l.group}` : ""}
                 </option>
               ))}
             </select>
           </label>
         ) : activeScope === "group" ? (
           <label>
-            Группа
+            Group
             <select
-              aria-label="Группа"
+              aria-label="Group"
               value={group}
               onChange={(e) => setGroup(e.target.value)}
             >
@@ -252,70 +257,72 @@ export default function Statistics({
             </select>
           </label>
         ) : (
-          <strong>Весь курс · {data.length} студентов</strong>
+          <strong>Entire course · {data.length} students</strong>
         )}
-        <span className="demo-badge">DEMO · срез на 16.10.2026, 12:00 UTC</span>
+        <span className="demo-badge">
+          DEMO · snapshot: 16 Oct 2026, 12:00 UTC
+        </span>
       </div>
       {mode === "ai" && (
         <Hint>
-          Самостоятельный курс: учебных групп нет. Здесь личный прогресс и
-          версии; индивидуальные дедлайны в примере не заданы.
+          Self-paced course: no groups. The example tracks personal progress and
+          versions; no individual deadlines are configured.
         </Hint>
       )}
       <div className="report-source">
-        <span>Источники</span>
+        <span>Sources</span>
         {config.sources.map((s) => (
           <strong key={s}>{s}</strong>
         ))}
         <span>→</span>
         <strong>
-          План{" "}
+          Track{" "}
           {activeScope === "student"
             ? `${current.version} / R${currentCard.revision}`
-            : "каждого студента"}
+            : "for each student"}
         </strong>
         <span>→</span>
         <strong>
           {activeScope === "student"
             ? current.name
             : activeScope === "course"
-              ? `Курс · ${selection.length} студентов`
-              : `Группа ${group} · ${selection.length} студента`}
+              ? `Course · ${selection.length} students`
+              : `Group ${group} · ${selection.length} students`}
         </strong>
       </div>
       <Section
-        number="К"
+        number="K"
         title={
           activeScope === "student"
-            ? "Карточка студента в БД"
-            : "Версии и треки выбранной выборки"
+            ? "Database student record"
+            : "Versions and tracks in this selection"
         }
       >
         <div className="version-summary" data-testid="student-card">
           <div>
-            <span>Закрепление</span>
+            <span>Version pin</span>
             <strong>
               {activeScope === "student"
                 ? `v${current.version} · R${currentCard.revision}`
-                : `${selection.length} карточек`}
+                : `${selection.length} records`}
             </strong>
             <small>
               {activeScope === "student"
                 ? currentCard.trackSource
-                : "Прогресс — по личному треку каждого"}
+                : "Progress uses each person's own track"}
             </small>
           </div>
           <div className={selectedCards.some(critical) ? "critical-state" : ""}>
-            <span>По манифесту · актуальная v{latestVersion}</span>
+            <span>Manifest · latest v{latestVersion}</span>
             <strong>
-              {selectedCards.filter(critical).length} требуют решения
+              {selectedCards.filter(critical).length} need a decision
             </strong>
-            <small>Критичное отличие, а не количество релизов</small>
+            <small>Critical differences, not release count</small>
           </div>
           <div>
-            <span>История</span>
+            <span>History</span>
             <strong>
-              {selectedCards.reduce((n, c) => n + c.audit.length, 0)} решений
+              {selectedCards.reduce((n, c) => n + c.audit.length, 0)} decisions
             </strong>
             <a
               href={
@@ -324,12 +331,12 @@ export default function Statistics({
                   : "#versions"
               }
             >
-              Сравнить и перенести версию →
+              Compare and migrate version →
             </a>
           </div>
         </div>
         <div className="automation-grid">
-          {["Теория", "Практика", "Тест"].map((kind) => {
+          {["Theory", "Practice", "Quiz"].map((kind) => {
             const kindMetrics = metrics(
               selection.map((l) => ({
                 ...l,
@@ -340,15 +347,15 @@ export default function Statistics({
               <Block
                 key={kind}
                 title={kind}
-                sub={`${kindMetrics.accepted} / ${kindMetrics.total} назначенного веса принято`}
-                tone={kind === "Тест" ? "blue" : ""}
+                sub={`${kindMetrics.accepted} / ${kindMetrics.total} of assigned weight accepted`}
+                tone={kind === "Quiz" ? "blue" : ""}
               />
             );
           })}
         </div>
         {mixedRubrics && (
           <Hint>
-            Оценки по разным критериям не объединяем.{" "}
+            Grades under different criteria are not combined.{" "}
             {Array.from(new Set(selection.map((l) => l.version)))
               .sort()
               .map(
@@ -356,8 +363,7 @@ export default function Statistics({
                   `v${v}: ${fmt(metrics(selection.filter((l) => l.version === v)).score, "%")}`,
               )
               .join(" · ")}
-            . Прогресс объединяется как сумма принятых весов / сумма назначенных
-            весов.
+            . Progress combines accepted weights / assigned weights.
           </Hint>
         )}
       </Section>
@@ -382,18 +388,18 @@ export default function Statistics({
       </div>
       <div className="metric-explainer" aria-live="polite">
         <div>
-          <span className="eyebrow">ИЗ ЧЕГО ПОЛУЧИЛОСЬ ЧИСЛО</span>
+          <span className="eyebrow">HOW THE NUMBER IS CALCULATED</span>
           <strong>{f[0]}</strong>
           <span>↓</span>
           <strong>{f[1]}</strong>
         </div>
         <p>{f[2]}</p>
         <small>
-          Вес — вклад задачи; в демо у каждой вес 1 · формула completion@1 ·
-          дата среза фиксирована
+          Weight is an activity's contribution; every demo activity weighs 1 ·
+          formula completion@1 · fixed snapshot date
         </small>
       </div>
-      <Section number="↔" title="Как распределились обязательные задачи">
+      <Section number="↔" title="Distribution of required activities">
         <div className="status-legend">
           {Object.entries(statusLabels).map(([key, label]) => (
             <button key={key} onClick={() => setStatus(key)}>
@@ -419,7 +425,7 @@ export default function Statistics({
                 <div
                   className="stacked-bar"
                   role="group"
-                  aria-label={`Состояния задач ${l.name}`}
+                  aria-label={`Activity states for ${l.name}`}
                 >
                   {Object.entries(statusLabels).map(([key, label]) => {
                     const count = tasks.filter((t) => t.status === key).length;
@@ -447,27 +453,27 @@ export default function Statistics({
       </Section>
       <div className="quality-strip">
         <span>
-          <strong>{m.unknown}</strong> назначений с неизвестным результатом
+          <strong>{m.unknown}</strong> assignments with unknown results
         </span>
         {mode !== "ai" && (
           <span>
-            В срок:{" "}
+            On time:{" "}
             <strong>
               {m.onTime} / {m.deadlineSubmissions}
             </strong>{" "}
-            сдач с известным сроком
+            submissions with a known deadline
           </span>
         )}
-        <span>Сдано ≠ принято</span>
+        <span>Submitted ≠ accepted</span>
       </div>
       <Section
-        number="А"
+        number="A"
         title={
           activeScope === "student"
-            ? "Задачи этого студента"
+            ? "This student's activities"
             : activeScope === "course"
-              ? "Весь курс по студентам"
-              : "Развёртка группы по студентам"
+              ? "Entire course by student"
+              : "Group breakdown by student"
         }
       >
         {activeScope !== "student" && (
@@ -475,12 +481,12 @@ export default function Statistics({
             <table>
               <thead>
                 <tr>
-                  <th>Студент</th>
-                  <th>Версия / трек</th>
-                  <th>Совместимость</th>
-                  <th>Принято / назначено</th>
-                  <th>Прогресс</th>
-                  <th>Действие</th>
+                  <th>Student</th>
+                  <th>Version / track</th>
+                  <th>Compatibility</th>
+                  <th>Accepted / assigned</th>
+                  <th>Progress</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -498,8 +504,8 @@ export default function Statistics({
                           className={`badge ${critical(cards.find((c) => c.learner.id === l.id)!) ? "red" : "blue"}`}
                         >
                           {critical(cards.find((c) => c.learner.id === l.id)!)
-                            ? "Нужен переход"
-                            : "Актуальна"}
+                            ? "Migration needed"
+                            : "Current"}
                         </span>
                       </td>
                       <td>
@@ -514,7 +520,7 @@ export default function Statistics({
                             setScope("student");
                           }}
                         >
-                          Открыть студента →
+                          Open student →
                         </button>
                       </td>
                     </tr>
@@ -526,13 +532,13 @@ export default function Statistics({
         )}
         <div className="table-controls">
           <label>
-            Показать
+            Show
             <select
-              aria-label="Фильтр статуса"
+              aria-label="Status filter"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
-              <option value="all">Все состояния</option>
+              <option value="all">All statuses</option>
               {Object.entries(statusLabels).map(([k, v]) => (
                 <option key={k} value={k}>
                   {v}
@@ -541,30 +547,32 @@ export default function Statistics({
             </select>
           </label>
           <label>
-            Сортировать
+            Sort
             <select
-              aria-label="Сортировка задач"
+              aria-label="Activity ordering"
               value={sort}
               onChange={(e) => setSort(e.target.value)}
             >
-              <option value="id">Студент → ID задачи</option>
-              <option value="status">По состоянию</option>
-              <option value="due">По сроку</option>
+              <option value="id">Student → activity ID</option>
+              <option value="status">By status</option>
+              <option value="due">By deadline</option>
             </select>
           </label>
-          <span>{tasks.length} записей · дополнительные задачи тоже видны</span>
+          <span>
+            {tasks.length} records · optional activities are also shown
+          </span>
         </div>
         <div className="table-scroll">
           <table>
             <thead>
               <tr>
-                <th>Кто / задача</th>
-                <th>Назначение</th>
-                <th>Состояние</th>
-                <th>Источник</th>
-                <th>Оценка</th>
-                <th>Срок UTC</th>
-                <th>Почему?</th>
+                <th>Who / activity</th>
+                <th>Assignment</th>
+                <th>Status</th>
+                <th>Source</th>
+                <th>Grade</th>
+                <th>Deadline UTC</th>
+                <th>Why?</th>
               </tr>
             </thead>
             <tbody>
@@ -576,7 +584,7 @@ export default function Statistics({
                       {activeScope !== "student" ? t.learner : t.plan}
                     </small>
                   </td>
-                  <td>{t.required ? "Обязательно" : "Дополнительно"}</td>
+                  <td>{t.required ? "Required" : "Optional"}</td>
                   <td>
                     <span
                       className={`badge ${t.status === "accepted" ? "blue" : t.status === "unknown" ? "red" : ""}`}
@@ -587,16 +595,16 @@ export default function Statistics({
                   <td>{t.source}</td>
                   <td>
                     {t.score === null
-                      ? "Нет оценки"
+                      ? "No grade"
                       : `${t.score} / ${t.maxScore}`}
                   </td>
                   <td>
-                    {t.due ? t.due.slice(5, 16).replace("T", " ") : "Не задан"}
+                    {t.due ? t.due.slice(5, 16).replace("T", " ") : "Not set"}
                   </td>
                   <td>
                     <button
                       className="link-button"
-                      aria-label={`Цепочка ${t.learner} ${t.id}`}
+                      aria-label={`Trace ${t.learner} ${t.id}`}
                       onClick={() => {
                         setSelectedTask(t.id);
                         if (activeScope !== "student") {
@@ -608,7 +616,7 @@ export default function Statistics({
                           ?.scrollIntoView({ block: "center" });
                       }}
                     >
-                      Показать →
+                      Show →
                     </button>
                   </td>
                 </tr>
@@ -616,38 +624,35 @@ export default function Statistics({
             </tbody>
           </table>
           {tasks.length === 0 && (
-            <p className="empty-state">В этом состоянии задач нет.</p>
+            <p className="empty-state">No activities have this status.</p>
           )}
         </div>
       </Section>
-      <Section number="Б" title="От числа обратно к источнику">
+      <Section number="B" title="From a metric back to its source">
         <div id="provenance">
-          <Flow label="Происхождение результата">
+          <Flow label="Result provenance">
             {[
               <Block
                 title={t.id}
                 sub={
                   t.required
-                    ? `Входит в трек R${currentCard.revision}`
-                    : "Дополнительная, вне знаменателя"
+                    ? `Included in track R${currentCard.revision}`
+                    : "Optional; outside the denominator"
                 }
               />,
               <Block
                 title={statusLabels[t.status]}
                 sub={
                   t.status === "accepted"
-                    ? "Принято по политике курса"
-                    : "Результат не принят"
+                    ? "Accepted under course policy"
+                    : "Result not accepted"
                 }
                 tone={t.status === "accepted" ? "blue" : ""}
               />,
+              <Block title={t.evidence[0] ?? "No evidence"} sub={t.source} />,
               <Block
-                title={t.evidence[0] ?? "Нет подтверждения"}
-                sub={t.source}
-              />,
-              <Block
-                title="Исходник + решение"
-                sub="Время · хеш · правило"
+                title="Source + decision"
+                sub="Time · hash · rule"
                 tone="dark"
               />,
             ]}
@@ -655,13 +660,19 @@ export default function Statistics({
         </div>
       </Section>
       {mode === "java" && (
-        <Section number="В" title="Что изменится, если принять работу">
+        <Section number="C" title="What changes when a submission is accepted">
           <Graph
-            title="Один MR может подтверждать несколько задач; несколько MR — одну задачу"
+            title="One MR can support several activities; several MRs can support one activity"
             height={320}
             zones={[
-              { x: 10, y: 10, w: 250, h: 290, title: "GitLab · подтверждения" },
-              { x: 380, y: 10, w: 260, h: 290, title: "План S-1 · назначения" },
+              { x: 10, y: 10, w: 250, h: 290, title: "GitLab · evidence" },
+              {
+                x: 380,
+                y: 10,
+                w: 260,
+                h: 290,
+                title: "S-1 track · assignments",
+              },
             ]}
             nodes={[
               {
@@ -669,7 +680,7 @@ export default function Statistics({
                 x: 35,
                 y: 65,
                 title: "MR !42",
-                sub: "два файла с решениями",
+                sub: "two solution files",
                 w: 200,
               },
               {
@@ -677,7 +688,7 @@ export default function Statistics({
                 x: 35,
                 y: 205,
                 title: "MR !43",
-                sub: "доработка первой задачи",
+                sub: "follow-up on the first activity",
                 w: 200,
               },
               {
@@ -685,7 +696,7 @@ export default function Statistics({
                 x: 410,
                 y: 65,
                 title: "TASK-21",
-                sub: "одно обязательство",
+                sub: "one obligation",
                 w: 200,
                 tone: "blue",
               },
@@ -694,7 +705,7 @@ export default function Statistics({
                 x: 410,
                 y: 205,
                 title: "TASK-22",
-                sub: "другое обязательство",
+                sub: "another obligation",
                 w: 200,
                 tone: "blue",
               },
@@ -702,38 +713,40 @@ export default function Statistics({
                 id: "decision",
                 x: 800,
                 y: 65,
-                title: "Решение учителя",
-                sub: "зачесть TASK-21 один раз",
+                title: "Instructor decision",
+                sub: "credit TASK-21 once",
                 w: 215,
                 tone: "red",
               },
             ]}
             edges={[
-              { from: "mr42", to: "task21", label: "связь 1" },
-              { from: "mr42", to: "task22", label: "связь 2" },
-              { from: "mr43", to: "task21", label: "ещё подтверждение" },
-              { from: "task21", to: "decision", label: "проверить качество" },
+              { from: "mr42", to: "task21", label: "link 1" },
+              { from: "mr42", to: "task22", label: "link 2" },
+              { from: "mr43", to: "task21", label: "more evidence" },
+              { from: "task21", to: "decision", label: "check quality" },
             ]}
           />
           <div className="mr-simulator">
             <div>
               <GitBranch size={24} />
-              <strong>MR !42 · TASK-21 · Студент 01</strong>
-              <span>GitLab: merged. В плане задача пока на проверке.</span>
+              <strong>MR !42 · TASK-21 · Student 01</strong>
+              <span>
+                GitLab: merged. The track activity is still under review.
+              </span>
             </div>
             <button
               className="button secondary"
               onClick={() => setLinked(true)}
               disabled={linked}
             >
-              {linked ? "Связь подтверждена" : "1. Подтвердить связь"}
+              {linked ? "Link confirmed" : "1. Confirm link"}
             </button>
             <button
               className="button primary"
               disabled={!linked || acceptedMr}
               onClick={() => onChange(acceptPractice(cards[0], "TASK-21"))}
             >
-              {acceptedMr ? "Работа принята" : "2. Принять работу"}
+              {acceptedMr ? "Submission accepted" : "2. Accept submission"}
             </button>
             <button
               className="link-button"
@@ -741,20 +754,20 @@ export default function Statistics({
                 setLinked(false);
               }}
             >
-              Сбросить
+              Reset
             </button>
           </div>
           <Hint>
             {acceptedMr
-              ? "Теперь задача входит в принятый вес Студента 01. Оценку не выдумываем: её покрытие не увеличилось."
+              ? "The activity now counts toward Student 01's accepted weight. No grade is invented, so grading coverage does not increase."
               : linked
-                ? "Связь подтверждена. Прогресс не изменился — работа ещё не принята."
-                : "Один MR может покрывать несколько задач. Здесь одно принятие добавит ровно одно назначение."}
+                ? "Link confirmed. Progress is unchanged until the submission is accepted."
+                : "One MR can cover several activities. This acceptance credits exactly one assignment."}
           </Hint>
           <div className="local-message" role="status">
             <Check size={16} />
-            Прогресс Студента 01: {fmt(metrics([data[0]]).percent, "%")}. Демо
-            обновляет общую карточку до перезагрузки сайта.
+            Student 01 progress: {fmt(metrics([data[0]]).percent, "%")}. The
+            demo updates the shared record until the page reloads.
           </div>
         </Section>
       )}
