@@ -18,6 +18,14 @@ The simulator starts before enrollment. Enrollment does not pin a version; the f
 
 Simulation runs are independent for each course and survive chapter navigation until a reload. **Open this result in statistics** explicitly copies the current simulation record into Student 01 for that course. Existing statistics and version demos also share student records across their chapters. Resetting the journey resets its sandbox, not other chapters.
 
+## Processing at every simulation step
+
+**See data processing** jumps from the event card to its processing chain. Select a transfer to see its format, filename where applicable, transport, processor, saved result and validation gates. Examples use the actual carrier: HTML for lesson delivery, JSON for API bodies/files and a transaction outline for internal migration jobs.
+
+The guide distinguishes a generated `student-course-versions.json` projection from tagged `manifest.json`, and release-time CI builds from request-time HTML delivery. CI review reports include `test-results.xml`, optional `review.json` and commit provenance. Background jobs ingest and normalize source records; exact IDs, formulas, compatibility and authorized commands use deterministic rules.
+
+For Discord, compare **Free text + AI** with **Structured command + parser**. Both paths retain the original message and yield a review proposal. AI adds quotation, confidence and model/prompt versions; approval still governs deadline changes. This processing comparison does not alter the simulated student's results. Claude Code review is optional and separate from tests and credit acceptance. These are proposed processing descriptions, without live integrations or AI calls.
+
 ## Development and checks
 
 Use Node.js 22.12+ and npm. In the managed workspace:
@@ -53,6 +61,8 @@ src/pages/                  Seven visual chapters
 src/lab.ts                  Synthetic records, ingestion and metrics
 src/platform.ts             Systems, vocabulary, tracks, manifests and delivery
 src/simulation.ts           Deterministic event journeys and replay
+src/processing.ts           Complete event/transfer processing descriptions
+src/components/ProcessingGuide.tsx  Processing diagrams, carriers and examples
 src/*.test.ts               Domain and publication-language checks
 tests/                      Desktop/mobile workflows and accessibility
 public/materials/           English historical reference documents and examples

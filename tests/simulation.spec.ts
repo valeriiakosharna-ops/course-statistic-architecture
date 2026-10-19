@@ -34,9 +34,7 @@ test("AI journey separates enrollment from pinning, preserves existing versions,
   await expect(page.getByTestId("simulation-transfer")).toContainText(
     "Exact tagged HTML",
   );
-  await page
-    .getByText("Inspect transferred data · example JSON", { exact: true })
-    .click();
+  await page.getByText("Inspect example · HTML", { exact: true }).click();
   await expect(page.locator(".transfer-panel pre")).toContainText(
     "ai-foundations/course-v1/index.html",
   );

@@ -16,6 +16,7 @@ import {
   Section,
 } from "../components/Diagram";
 import { fmt, metrics } from "../lab";
+import ProcessingGuide, { ProcessingKey } from "../components/ProcessingGuide";
 import { systems, type Card, type SystemId } from "../platform";
 import {
   newRun,
@@ -162,6 +163,7 @@ export default function Simulation({
           <small>Sheets → Moodle → GitLab practice → Discord → migration</small>
         </button>
       </div>
+      <ProcessingKey />
       <div className="simulation-player">
         <div className="simulation-controls-row">
           <button
@@ -263,6 +265,22 @@ export default function Simulation({
                 current?.effect ??
                 "Course-v1 is already published. Start the journey or select an event. The student has no course access, no pinned version and no accepted progress yet."}
             </p>
+            {current && (
+              <button
+                className="link-button event-processing-link"
+                aria-controls="event-processing-guide"
+                onClick={() => {
+                  setPlaying(false);
+                  const guide = document.getElementById(
+                    "event-processing-guide",
+                  );
+                  guide?.focus({ preventScroll: true });
+                  guide?.scrollIntoView({ block: "start" });
+                }}
+              >
+                See data processing ↓
+              </button>
+            )}
             {state.blocked &&
               (run.options.migrationMode === "manual" ? (
                 <button
@@ -371,10 +389,14 @@ export default function Simulation({
                             : "Illustrative transfer for this event; inspect its payload below."}
                     </small>
                   </div>
-                  <details className="simulation-payload">
-                    <summary>Inspect transferred data · example JSON</summary>
-                    <pre>{JSON.stringify(packet.payload, null, 2)}</pre>
-                  </details>
+                  <ProcessingGuide
+                    key={current.id}
+                    step={current}
+                    transfer={packet}
+                    options={run.options}
+                    blocked={!!state.blocked}
+                    failed={state.deliveryFailed && packet.to === "materials"}
+                  />
                 </>
               )}
             </div>
