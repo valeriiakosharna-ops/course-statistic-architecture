@@ -11,29 +11,29 @@ import {
   Section,
 } from "../components/Diagram";
 const steps = [
-  "Получить",
-  "Сохранить исходник",
-  "Привести поля",
-  "Убрать дубли",
-  "Связать ID",
-  "Классифицировать",
-  "Посчитать",
+  "Receive",
+  "Store source",
+  "Normalize fields",
+  "Deduplicate",
+  "Link IDs",
+  "Classify",
+  "Calculate",
 ];
 const destinations: Record<string, string> = {
-  evidence: "Подтверждения выполнения",
-  "review-queue": "Очередь сверки",
-  "plan-proposal": "Проект трека",
-  "course-config": "Версии и манифесты",
-  "clarification-proposal": "Проект уточнения",
-  "grade-candidate": "Кандидат оценки",
+  evidence: "Completion evidence",
+  "review-queue": "Review queue",
+  "plan-proposal": "Proposed track",
+  "course-config": "Versions and manifests",
+  "clarification-proposal": "Proposed clarification",
+  "grade-candidate": "Proposed grade",
 };
 const sourceNames = [
   "Moodle",
-  "GitLab · студенты",
-  "Sheets · назначения",
-  "GitLab · материалы",
+  "GitLab · students",
+  "Sheets · assignments",
+  "GitLab · materials",
   "Discord",
-  "Sheets · оценки",
+  "Sheets · grades",
 ];
 export default function DataFlow({
   mode,
@@ -115,7 +115,7 @@ export default function DataFlow({
                   channel_id: "group-A",
                   author_id: "teacher-7",
                   content:
-                    "Для группы A срок TASK-01 — 22 октября, 23:59 по Киеву",
+                    "For group A, TASK-01 is due on 22 October at 23:59 Europe/Kyiv",
                   edited_at: null,
                 }
               : {
@@ -147,15 +147,15 @@ export default function DataFlow({
     {
       key: packetKey(packet),
       revision: packet.revision,
-      same_revision: "пропустить",
-      changed_revision: "новая запись, прежняя сохранена",
+      same_revision: "skip",
+      changed_revision: "append a revision; retain the previous one",
     },
     {
       account_map: verified
-        ? "подтверждено человеком"
+        ? "confirmed by a person"
         : missing
-          ? "не сопоставлен"
-          : "стабильные ID / реестр группы",
+          ? "unmatched"
+          : "stable IDs / group registry",
       student: packet.learner,
       activity: packet.task,
       course_version: `v${card.learner.version}`,
@@ -164,12 +164,12 @@ export default function DataFlow({
     {
       destination: destinations[destination],
       auto_credit: false,
-      rule: "тип записи + права источника + политика курса",
+      rule: "record type + source permissions + course policy",
     },
     {
       snapshot_at: "2026-10-16T12:00:00Z",
       formula: "completion@1",
-      denominator: "только обязательный трек студента",
+      denominator: "only the student's required track",
       source_watermark: outage ? "stale" : facts.length ? "loaded" : "unknown",
     },
   ];
@@ -177,58 +177,55 @@ export default function DataFlow({
     if (outage) {
       setFeedback(
         facts.length
-          ? "Источник недоступен. Последние факты сохранены; свежесть устарела."
-          : "Источник недоступен. Успешной загрузки ещё не было; свежесть неизвестна.",
+          ? "Source unavailable. Previous facts are retained; freshness is stale."
+          : "Source unavailable. No successful load yet; freshness is unknown.",
       );
       return;
     }
     setIntake((previous) => ingest(previous, packet));
     setFeedback(
-      "Запись получена. Повтор ключа и revision не создаёт новый факт.",
+      "Record received. Repeating a key and revision creates no additional fact.",
     );
   }
   return (
     <>
       <Heading
-        kicker="03 / СБОР · СИСТЕМАТИЗАЦИЯ · РАСПРЕДЕЛЕНИЕ"
-        title="Пройдём путь одной записи"
-        sub="Ниже можно получить запись, повторить загрузку и посмотреть, в какую часть БД она попадёт."
+        kicker="03 / COLLECT · ORGANIZE · DISTRIBUTE"
+        title="Follow a single record"
+        sub="Receive a record, repeat the load and see which database category receives it."
       />
-      <Flow label="Общий конвейер данных">
+      <Flow label="End-to-end data pipeline">
         {[
+          <Block title="5 sources" sub="API / events / structured file" />,
           <Block
-            title="5 источников"
-            sub="API / события / структурированный файл"
+            title="Source data and links"
+            sub="History + canonical IDs + deduplication"
           />,
           <Block
-            title="Исходники и связи"
-            sub="История + единые ID + проверка дублей"
-          />,
-          <Block
-            title="Карточка в БД"
-            sub="Трек + версия + принятые факты"
+            title="Database student record"
+            sub="Track + version + accepted facts"
             tone="dark"
           />,
           <Block
             title="LearningAtlas"
-            sub="Студент → группа → курс"
+            sub="Student → group → course"
             tone="blue"
           />,
         ]}
       </Flow>
-      <Section number="А" title="Откуда, в каком формате и за счёт чего">
+      <Section number="A" title="Where data comes from and how it is collected">
         <div
           className="source-matrix table-scroll"
           tabIndex={0}
           role="region"
-          aria-label="Источники и форматы данных"
+          aria-label="Sources and data formats"
         >
           <table>
             <thead>
               <tr>
-                <th>Источник</th>
-                <th>Что получаем</th>
-                <th>Как забираем</th>
+                <th>Source</th>
+                <th>What is received</th>
+                <th>How it is collected</th>
               </tr>
             </thead>
             <tbody>
@@ -247,16 +244,15 @@ export default function DataFlow({
           </table>
         </div>
         <Hint>
-          События ускоряют доставку, jobs регулярно сверяют данные через API. У
-          каждого источника — курсор, постраничное чтение, повтор с задержкой и
-          отметка последней успешной загрузки. Discord-боту нужны доступ к
-          учебным каналам и разрешение читать сообщения; входящий webhook
-          Discord этого не делает.
+          Events speed up delivery; scheduled API jobs reconcile data. Each
+          source has a cursor, pagination, retries and a last-successful-load
+          marker. A Discord bot needs channel access and message permissions; an
+          incoming Discord webhook cannot read chat history.
         </Hint>
       </Section>
       <Section
-        number="Б"
-        title="Лаборатория приёма: запись ещё не означает зачёт"
+        number="B"
+        title="Intake lab: receiving a record does not award credit"
       >
         <div className="source-controls">
           {available.map((i) => (
@@ -275,20 +271,20 @@ export default function DataFlow({
             </button>
           ))}
         </div>
-        <div className="tabs" aria-label="Способ загрузки">
+        <div className="tabs" aria-label="Collection method">
           <button
             aria-pressed={transport === "api"}
             className={transport === "api" ? "selected" : ""}
             onClick={() => setTransport("api")}
           >
-            API / события
+            API / events
           </button>
           <button
             aria-pressed={transport === "csv"}
             className={transport === "csv" ? "selected" : ""}
             onClick={() => setTransport("csv")}
           >
-            Ручной пилот · CSV / JSON
+            Manual pilot · CSV / JSON
           </button>
         </div>
         <div className="pipeline-steps">
@@ -307,8 +303,8 @@ export default function DataFlow({
         <div className="json-panel">
           <span>
             {transport === "csv" && step === 0
-              ? "Ручной импорт: сохраняем файл и источник"
-              : `ШАГ ${step + 1} · ${steps[step]}`}
+              ? "Manual import: preserve file and origin"
+              : `STEP ${step + 1} · ${steps[step]}`}
           </span>
           <pre>
             {transport === "csv" && step === 0 && index === 2
@@ -323,7 +319,7 @@ export default function DataFlow({
               checked={outage}
               onChange={(e) => setOutage(e.target.checked)}
             />
-            Источник недоступен
+            Source unavailable
           </label>
           <label>
             <input
@@ -334,63 +330,63 @@ export default function DataFlow({
                 setVerified(false);
               }}
             />
-            Не удалось связать аккаунт
+            Account could not be linked
           </label>
           <button
             className="button secondary"
             disabled={!missing || verified}
             onClick={() => setVerified(true)}
           >
-            Подтвердить связь
+            Confirm link
           </button>
           <button className="button primary" onClick={receive}>
-            Получить запись
+            Receive record
           </button>
         </div>
         <div className="intake-counters">
           <div>
             <strong data-testid="unique-facts">{intake.facts.length}</strong>
-            <span>Уникальных редакций</span>
+            <span>Unique revisions</span>
           </div>
           <div>
             <strong data-testid="duplicates">{intake.duplicates}</strong>
-            <span>Дублей пропущено</span>
+            <span>Duplicates skipped</span>
           </div>
           <div>
             <strong>{destinations[destination]}</strong>
-            <span>Куда направим выбранную запись</span>
+            <span>Destination of this record</span>
           </div>
           <div>
             <strong>
               {outage
                 ? facts.length
-                  ? "Устарело"
-                  : "Неизвестно"
+                  ? "Stale"
+                  : "Unknown"
                 : facts.length
-                  ? "Загружено"
-                  : "Ещё не читали"}
+                  ? "Loaded"
+                  : "Not loaded yet"}
             </strong>
-            <span>Свежесть этого источника</span>
+            <span>Source freshness</span>
           </div>
         </div>
         <div className="local-message" role="status">
           {feedback ||
-            "Выберите источник и получите запись. Это изолированный пример приёма; изменения карточки применяются отдельно ниже."}
+            "Choose a source and receive a record. This intake example is isolated; apply student record changes separately below."}
         </div>
         {intake.facts.length > 0 && (
           <div
             className="table-scroll"
             tabIndex={0}
             role="region"
-            aria-label="Принятые записи"
+            aria-label="Received records"
           >
             <table>
               <thead>
                 <tr>
-                  <th>Время события UTC ↑</th>
-                  <th>Источник / ID</th>
+                  <th>Event time UTC ↑</th>
+                  <th>Source / ID</th>
                   <th>Revision</th>
-                  <th>Класс данных</th>
+                  <th>Data category</th>
                 </tr>
               </thead>
               <tbody>
@@ -409,9 +405,9 @@ export default function DataFlow({
           </div>
         )}
       </Section>
-      <Section number="В" title="Как БД раскладывает данные по полкам">
+      <Section number="C" title="How the database organizes data">
         <Graph
-          title="Внутри БД · исходники не подменяют назначения и результаты"
+          title="Inside the database · source records, assignments and results stay distinct"
           height={520}
           nodes={[
             {
@@ -419,24 +415,24 @@ export default function DataFlow({
               x: 25,
               y: 210,
               w: 190,
-              title: "Исходники · raw",
-              sub: "JSON / файл / сообщение",
+              title: "Source data · raw",
+              sub: "JSON / file / message",
             },
             {
               id: "identity",
               x: 335,
               y: 65,
               w: 230,
-              title: "Связи аккаунтов",
-              sub: "student_id ↔ внешние ID",
+              title: "Account links",
+              sub: "student_id ↔ external IDs",
             },
             {
               id: "class",
               x: 335,
               y: 210,
               w: 230,
-              title: "Тип + политика",
-              sub: "проверить права и смысл",
+              title: "Type + policy",
+              sub: "check rights and meaning",
               tone: "blue",
             },
             {
@@ -444,8 +440,8 @@ export default function DataFlow({
               x: 335,
               y: 380,
               w: 230,
-              title: "Очередь сверки",
-              sub: "нет ID / конфликт / неясно",
+              title: "Review queue",
+              sub: "missing ID / conflict / unclear",
               tone: "red",
             },
             {
@@ -453,86 +449,89 @@ export default function DataFlow({
               x: 760,
               y: 65,
               w: 250,
-              title: "Факты выполнения",
-              sub: "попытки · MR · оценки",
+              title: "Completion evidence",
+              sub: "attempts · MRs · grades",
             },
             {
               id: "plans",
               x: 760,
               y: 210,
               w: 250,
-              title: "Назначения и сроки",
-              sub: "трек + подтверждённые уточнения",
+              title: "Assignments and deadlines",
+              sub: "track + confirmed clarifications",
             },
             {
               id: "releases",
               x: 760,
               y: 380,
               w: 250,
-              title: "Версии и переходы",
-              sub: "теги · манифест · решения",
+              title: "Versions and transitions",
+              sub: "tags · manifest · decisions",
             },
           ]}
           edges={[
-            { from: "raw", to: "class", label: "нормализовать" },
-            { from: "identity", to: "class", label: "найти студента" },
-            { from: "class", to: "queue", label: "неоднозначно" },
-            { from: "class", to: "facts", label: "результат" },
-            { from: "class", to: "plans", label: "обязательство" },
-            { from: "class", to: "releases", label: "конфигурация курса" },
+            { from: "raw", to: "class", label: "normalize" },
+            { from: "identity", to: "class", label: "identify student" },
+            { from: "class", to: "queue", label: "ambiguous" },
+            { from: "class", to: "facts", label: "result" },
+            { from: "class", to: "plans", label: "obligation" },
+            { from: "class", to: "releases", label: "course configuration" },
           ]}
         />
         <div className="architecture-pair">
           <Block
-            title="Ключи и сортировка"
-            sub="source + instance + type + external_id + revision; факты по времени события, не времени загрузки."
+            title="Keys and ordering"
+            sub="source + instance + type + external_id + revision; sort by event time, not ingestion time."
           />
           <Block
-            title="Ничего не склеиваем по имени"
-            sub="Аккаунт Moodle, GitLab и Discord связываем с единым student_id. Неясные связи проверяет человек."
+            title="Names alone do not establish identity"
+            sub="Moodle, GitLab and Discord accounts link to one student_id. A person reviews uncertain matches."
           />
         </div>
       </Section>
-      <Section number="Г" title="Назначить трек: вручную или по правилу группы">
-        <Flow label="От назначения к статистике">
+      <Section
+        number="D"
+        title="Assign a track: manually or through a group rule"
+      >
+        <Flow label="From assignment to statistics">
           {[
             <Block
               title="Sheets / LearningAtlas"
               sub={
                 track === "individual"
-                  ? "Личный выбор преподавателя"
-                  : "Строки шаблона группы"
+                  ? "Instructor's personal selection"
+                  : "Group template rows"
               }
             />,
             <Block
-              title="Проверить область"
-              sub="Курс · версия · student_id / group_id"
+              title="Check scope"
+              sub="Course · version · student_id / group_id"
             />,
             <Block
-              title={`БД: R${card.revision}`}
+              title={`Database: R${card.revision}`}
               sub={card.trackSource}
               tone="dark"
             />,
             <Block
-              title="Moodle + статистика"
-              sub="Меняется список обязательного"
+              title="Moodle + statistics"
+              sub="The required activity list changes"
               tone="blue"
             />,
           ]}
         </Flow>
         <div className="lab-controls">
           <label>
-            Способ назначения
+            Assignment method
             <select
-              aria-label="Способ назначения трека"
+              aria-label="Track assignment method"
               value={track}
               onChange={(e) => {
                 setTrack(e.target.value as typeof track);
                 setApproved(false);
               }}
             >
-              <option value="individual">Вручную: первые 4 активности</option>
-              <option value="group">Автоматически: шаблон группы</option>
+              <option value="individual">Manual: first 4 activities</option>
+              <option value="group">Automatic: group template</option>
             </select>
           </label>
           <label>
@@ -542,8 +541,8 @@ export default function DataFlow({
               onChange={(e) => setApproved(e.target.checked)}
             />
             {track === "individual"
-              ? "Преподаватель утвердил назначение"
-              : "Правило группы разрешено владельцем курса"}
+              ? "Instructor approved the assignment"
+              : "Course owner enabled the group rule"}
           </label>
           <button
             className="button primary"
@@ -555,41 +554,40 @@ export default function DataFlow({
               setApproved(false);
             }}
           >
-            Применить трек к Студенту 01
+            Apply track to Student 01
           </button>
         </div>
         <div className="compact-inspector" data-testid="shared-track">
-          <strong>Студент 01 · R{card.revision}</strong>
+          <strong>Student 01 · R{card.revision}</strong>
           <span>
-            {card.learner.tasks.filter((t) => t.required).length} обязательных
-            активностей.{" "}
-            <a href="#statistics">Посмотреть результат в статистике →</a>
+            {card.learner.tasks.filter((t) => t.required).length} required
+            activities. <a href="#statistics">See the result in statistics →</a>
           </span>
         </div>
         <Hint>
-          Групповой шаблон разворачивается в личные назначения. Личное
-          исключение имеет приоритет, пока не отменено отдельным решением. Не
-          назначенная активность может быть видна в хрестоматии Moodle, но не
-          входит в знаменатель прогресса.
+          A group template expands into personal assignments. Explicit personal
+          exceptions take priority until separately revoked. Unassigned
+          activities can remain visible in Moodle's catalog without entering the
+          progress denominator.
         </Hint>
       </Section>
       <Section
-        number="Д"
-        title="Уточнения и конфликтующие оценки: без скрытых перезаписей"
+        number="E"
+        title="Clarifications and grade conflicts: explicit decisions"
       >
         <div className="architecture-pair">
           <div className="decision-card">
-            <span className="eyebrow">DISCORD → ДЕДЛАЙН TASK-01</span>
-            <p>«Для группы A — 22 октября, 23:59 по Киеву»</p>
-            <Flow label="Проверка уточнения">
+            <span className="eyebrow">DISCORD → TASK-01 DEADLINE</span>
+            <p>“For group A: 22 October, 23:59 Europe/Kyiv”</p>
+            <Flow label="Clarification review">
               {[
                 <Block
-                  title="ИИ предлагает"
-                  sub="Задание · группа · дата · цитата"
+                  title="AI proposes"
+                  sub="Activity · group · date · quotation"
                 />,
                 <Block
-                  title="Правило / человек"
-                  sub="Автор уполномочен? Часовой пояс ясен?"
+                  title="Policy / person"
+                  sub="Authorized author? Clear time zone?"
                   tone="red"
                 />,
               ]}
@@ -611,87 +609,87 @@ export default function DataFlow({
                 setClarified(true);
               }}
             >
-              Подтвердить для Студента 01 · группа A
+              Confirm for Student 01 · group A
             </button>
             <small>
               {clarified
-                ? "Дедлайн Студента 01: 22.10.2026, 20:59 UTC. Исходное сообщение сохранено в истории."
-                : "Демо применяет уточнение к карточке S-1 группы A. Для самостоятельного курса группа не задана."}
+                ? "Student 01 deadline: 22 Oct 2026, 20:59 UTC. The original message remains in history."
+                : "This demo applies the clarification to S-1 in group A. The self-paced course has no group."}
             </small>
           </div>
           <div className="decision-card">
             <span className="eyebrow">MOODLE 8/10 · SHEETS 9/10</span>
-            <p>Две записи об одном результате.</p>
+            <p>Two records describe the same result.</p>
             <label>
-              Политика источника оценки
+              Grade source policy
               <select
-                aria-label="Приоритет оценки"
+                aria-label="Grade priority"
                 value={gradeChoice}
                 onChange={(e) => setGradeChoice(e.target.value)}
               >
-                <option value="moodle">Основная оценка — Moodle</option>
-                <option value="sheets">Утверждённая коррекция — Sheets</option>
-                <option value="review">Не настроено → сверка</option>
+                <option value="moodle">Primary grade: Moodle</option>
+                <option value="sheets">Approved correction: Sheets</option>
+                <option value="review">Not configured → review</option>
               </select>
             </label>
             <strong className="decision-result">
               {gradeChoice === "moodle"
-                ? "Итог: 8/10; Sheets сохранён как кандидат"
+                ? "Result: 8/10; Sheets retained as a candidate"
                 : gradeChoice === "sheets"
-                  ? "Итог: 9/10 + автор и причина коррекции"
-                  : "Итог не выбран; конфликт подсвечен"}
+                  ? "Result: 9/10 + correction author and reason"
+                  : "No selected result; conflict highlighted"}
             </strong>
             <small>
-              Пример выбора политики; не изменяет демонстрационную оценку.
-              Последняя по времени запись не становится автоматически истиной.
-              Оценки не усредняются между источниками.
+              Policy selection example; it does not modify the demo grade. The
+              newest record is not automatically authoritative. Grades from
+              different sources are not averaged.
             </small>
           </div>
         </div>
       </Section>
-      <Section number="Е" title="Где jobs, где ИИ, где человек">
+      <Section number="F" title="Where to use jobs, AI and people">
         <div className="automation-grid">
           <Block
-            title="Пайплайны и jobs"
-            sub="API, JSON/CSV, ID, UTC, дубли, формулы, манифест, перенос по явной карте, сверка зеркал."
+            title="Pipelines and jobs"
+            sub="APIs, JSON/CSV, IDs, UTC, deduplication, formulas, manifests, explicit credit transfer and projection reconciliation."
             tone="blue"
           />
           <Block
-            title="ИИ предлагает"
-            sub="Разобрать текст Discord, неструктурированную строку Sheets, связь MR с задачей; Claude Code — review по рубрике."
+            title="AI proposes"
+            sub="Parse Discord text, unstructured Sheets rows or MR-to-task links; Claude Code reviews against a rubric."
           />
           <Block
-            title="Человек или заданная политика"
-            sub="Подтвердить неоднозначность, право менять срок, зачёт практики, критический переход. Решение + основание — в аудит."
+            title="A person or an approved policy"
+            sub="Resolve ambiguity, authorize deadline changes, award practice credit and approve critical migrations. Record each decision and its evidence."
             tone="red"
           />
         </div>
-        <Flow label="Автоматическая проверка практики">
+        <Flow label="Automated practical checks">
           {[
             <Block
-              title="Студенческий MR"
-              sub="Код рассматривается как входные данные"
+              title="Student MR"
+              sub="Treat submitted code as input data"
             />,
             <Block
-              title="CI: тесты и анализ"
-              sub="В изолированной job, без рабочих секретов"
+              title="CI: tests and analysis"
+              sub="Isolated job, without production secrets"
             />,
             <Block
               title="Claude Code: review"
-              sub="JSON по рубрике + ссылки на строки"
+              sub="Rubric-based JSON + source line references"
             />,
             <Block
-              title="Политика / преподаватель"
-              sub="Рекомендация → отдельный зачёт"
+              title="Policy / instructor"
+              sub="Recommendation → separate credit decision"
               tone="dark"
             />,
           ]}
         </Flow>
         <Hint>
-          ИИ не нужен для точных ID, формул или сравнения версий. Автозачёт
-          возможен только по заранее разрешённой и проверенной рубрике. Для
-          текста сохраняем цитату, версию модели и шаблона, уверенность и
-          решение; неясность отправляем на сверку.
+          Exact IDs, formulas and version comparisons do not need AI. Automatic
+          credit requires an approved, validated rubric. For text extraction,
+          retain the quotation, model/prompt version, confidence and decision;
+          send ambiguity to review.
         </Hint>
       </Section>
     </>

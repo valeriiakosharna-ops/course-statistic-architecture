@@ -30,42 +30,42 @@ export default function Ecosystems({ mode }: { mode: CourseMode }) {
             to: "db",
             label:
               id === "materials"
-                ? "версии + манифест"
+                ? "versions + manifest"
                 : id === "sheets"
-                  ? "трек / срок / оценка"
+                  ? "track / deadline / grade"
                   : id === "discord"
-                    ? "уточнение + автор"
+                    ? "clarification + author"
                     : id === "work"
-                      ? "код / MR / review"
-                      : "попытки / завершения",
+                      ? "code / MR / review"
+                      : "attempts / completions",
             dashed: optional(mode, id),
           })),
-          { from: "db", to: "atlas", label: "карточки и метрики" },
+          { from: "db", to: "atlas", label: "records and metrics" },
         ]
       : layer === "versions"
         ? [
-            { from: "atlas", to: "db", label: "решение о переходе" },
-            { from: "db", to: "materials", label: "копия закреплений" },
-            { from: "db", to: "moodle", label: "версия студента" },
+            { from: "atlas", to: "db", label: "migration decision" },
+            { from: "db", to: "materials", label: "version pin projection" },
+            { from: "db", to: "moodle", label: "student version" },
           ]
         : [
-            { from: "sheets", to: "db", label: "назначения группы" },
-            { from: "discord", to: "db", label: "кандидат уточнения" },
-            { from: "atlas", to: "db", label: "утвердить / правило" },
-            { from: "db", to: "moodle", label: "личный трек" },
+            { from: "sheets", to: "db", label: "group assignments" },
+            { from: "discord", to: "db", label: "proposed clarification" },
+            { from: "atlas", to: "db", label: "approval / policy" },
+            { from: "db", to: "moodle", label: "personal track" },
           ];
   return (
     <>
       <Heading
-        kicker="02 / РОВНО СЕМЬ СИСТЕМ"
-        title="У каждой системы — своя роль"
-        sub="Пять источников → одна карточка в БД → LearningAtlas. Переключайте слой и нажимайте на блоки."
+        kicker="02 / EXACTLY SEVEN SYSTEMS"
+        title="Each system has its own role"
+        sub="Five sources → one database student record → LearningAtlas. Switch layers and select blocks."
       />
-      <div className="tabs" aria-label="Слой архитектуры">
+      <div className="tabs" aria-label="Architecture layer">
         {[
-          ["facts", "Сбор статистики"],
-          ["versions", "Смена версии"],
-          ["tracks", "Назначение трека"],
+          ["facts", "Collect statistics"],
+          ["versions", "Change version"],
+          ["tracks", "Assign track"],
         ].map(([id, label]) => (
           <button
             key={id}
@@ -78,7 +78,7 @@ export default function Ecosystems({ mode }: { mode: CourseMode }) {
         ))}
       </div>
       <Graph
-        title="Семь систем · стрелка показывает, куда передаются данные"
+        title="Seven systems · arrows show data direction"
         height={700}
         selected={selected}
         onSelect={(id) => setSelected(id as SystemId)}
@@ -88,17 +88,17 @@ export default function Ecosystems({ mode }: { mode: CourseMode }) {
             y: 10,
             w: 330,
             h: 675,
-            title: "Источники учебных данных",
-            sub: "Не все нужны каждому типу курса",
+            title: "Learning data sources",
+            sub: "Some connections depend on course type",
           },
           {
             x: 480,
             y: 230,
             w: 290,
             h: 230,
-            title: "Агрегация и классификация",
+            title: "Aggregation and classification",
           },
-          { x: 815, y: 230, w: 215, h: 230, title: "Отчёты и решения" },
+          { x: 815, y: 230, w: 215, h: 230, title: "Reports and decisions" },
         ]}
         nodes={systems.map((s) => {
           const index = [
@@ -130,107 +130,98 @@ export default function Ecosystems({ mode }: { mode: CourseMode }) {
         <div>
           <span className="eyebrow">
             {optional(mode, selected)
-              ? "ДЛЯ ЭТОГО ТИПА КУРСА НЕ ПОДКЛЮЧЕНО"
-              : "РОЛЬ СИСТЕМЫ"}
+              ? "NOT CONNECTED FOR THIS COURSE TYPE"
+              : "SYSTEM ROLE"}
           </span>
           <h3>{system.title}</h3>
           <p>{system.owns}</p>
         </div>
         <div>
-          <span className="eyebrow">КАК ПОЛУЧАЕМ ДАННЫЕ</span>
+          <span className="eyebrow">HOW DATA IS COLLECTED</span>
           <strong>{system.format}</strong>
           <small>{system.method}</small>
         </div>
       </div>
-      <Section
-        number="А"
-        title="Первый вход в активность: закрепить и показать"
-      >
-        <Flow label="Закрепление версии при первой активности">
+      <Section number="A" title="First activity: pin a version and deliver it">
+        <Flow label="Version pinning at first activity">
           {[
-            <Block title="Moodle" sub="Проверенный user_id + course_id" />,
+            <Block title="Moodle" sub="Verified user_id + course_id" />,
             <Block
-              title="БД: создать закрепление"
-              sub="Последний опубликованный тег; один раз"
+              title="Database: create pin"
+              sub="Latest published tag; once"
               tone="dark"
             />,
             <Block
-              title="GitLab материалов"
-              sub="Копия user → tag из очереди БД"
+              title="Materials GitLab"
+              sub="user → tag projection from the DB queue"
             />,
             <Block
-              title="Moodle открывает сборку"
-              sub="Плагин / сервис выбирает точный тег"
+              title="Moodle opens the build"
+              sub="Plugin / service selects the exact tag"
               tone="blue"
             />,
           ]}
         </Flow>
         <Hint>
-          Сборка по тегу не определяет пользователя сама. Moodle передаёт
-          проверенный контекст, компонент доставки читает закрепление в БД и
-          отдаёт нужный HTML. Защищённый файл закреплений в GitLab — проекция
-          БД; при задержке синхронизации работает закрепление из БД.
+          A tagged static build cannot identify a student. Moodle sends verified
+          context; a delivery component reads the database pin and returns the
+          correct HTML. The protected GitLab mapping is a projection; a delayed
+          update does not override the database pin.
         </Hint>
       </Section>
-      <Section
-        number="Б"
-        title="Новый релиз: сравнить, принять решение, синхронизировать"
-      >
-        <Flow label="Переход между версиями">
+      <Section number="B" title="New release: compare, decide, synchronize">
+        <Flow label="Moving between versions">
           {[
             <Block
-              title="GitLab: новый тег"
-              sub="CI проверил сборку и манифест"
+              title="GitLab: new tag"
+              sub="CI validated build and manifest"
             />,
             <Block
-              title="Job в контуре БД"
-              sub="Сравнить v студента с правилами манифеста"
+              title="Database background job"
+              sub="Compare the student's version with manifest rules"
             />,
             <Block
               title="LearningAtlas"
-              sub="Критично → вручную или автополитика"
+              sub="Critical → manual or automatic policy"
               tone="red"
             />,
             <Block
-              title="БД → GitLab + Moodle"
-              sub="Новая версия, трек, перенос и история"
+              title="Database → GitLab + Moodle"
+              sub="New version, track, transferred credit, history"
               tone="dark"
             />,
           ]}
         </Flow>
       </Section>
       <Section
-        number="В"
-        title="Трек задаёт обязательства; источники подтверждают выполнение"
+        number="C"
+        title="The track defines obligations; sources confirm completion"
       >
         <div className="architecture-pair">
           <div>
-            <span className="eyebrow">ЧТО НУЖНО СДЕЛАТЬ</span>
-            <Flow label="Назначения">
+            <span className="eyebrow">WHAT MUST BE DONE</span>
+            <Flow label="Assignments">
               {[
                 <Block
                   title="Sheets / LearningAtlas"
-                  sub="Группа или личное назначение"
+                  sub="Group template or personal assignment"
                 />,
                 <Block
-                  title="БД: трек R2"
-                  sub="Кто · что · к какому сроку"
+                  title="Database: track R2"
+                  sub="Who · what · by when"
                   tone="blue"
                 />,
               ]}
             </Flow>
           </div>
           <div>
-            <span className="eyebrow">ЧТО УЖЕ СДЕЛАНО</span>
-            <Flow label="Результаты">
+            <span className="eyebrow">WHAT HAS BEEN DONE</span>
+            <Flow label="Results">
               {[
+                <Block title="Moodle / GitLab" sub="Attempts, MRs, evidence" />,
                 <Block
-                  title="Moodle / GitLab"
-                  sub="Попытки, MR, подтверждения"
-                />,
-                <Block
-                  title="БД: принятый итог"
-                  sub="По правилам этого курса"
+                  title="Database: accepted result"
+                  sub="Under this course's policy"
                   tone="dark"
                 />,
               ]}
@@ -238,10 +229,9 @@ export default function Ecosystems({ mode }: { mode: CourseMode }) {
           </div>
         </div>
         <Hint>
-          Discord уточняет условия. Сообщение сначала связывается с автором,
-          группой и заданием; затем применяется подтверждённое изменение. CI,
-          jobs, бот и компонент доставки — части этих семи систем, а не
-          дополнительные глобальные системы.
+          Discord clarifies conditions. Messages are linked to an author, group
+          and activity before approved changes apply. CI, jobs, the bot and
+          delivery components belong inside these seven systems.
         </Hint>
       </Section>
     </>

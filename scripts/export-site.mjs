@@ -57,7 +57,7 @@ async function collect(directory, relative) {
 }
 await collect(path.join(dist, "materials"), "learning-atlas/materials");
 files["learning-atlas/START-HERE.txt"] = strToU8(
-  "Распакуйте архив целиком и откройте index.html в современном браузере.\nВсе примеры синтетические. Подключения к учебным системам не выполняются.\nДокументы-источники находятся в папке materials.\n",
+  "Extract the full archive and open index.html in a modern browser.\nAll examples are synthetic. No live learning systems are connected.\nReference documents are in the materials directory.\n",
 );
 await mkdir(path.join(output, "learning-atlas"), { recursive: true });
 await writeFile(path.join(output, "learning-atlas/index.html"), html);

@@ -9,6 +9,7 @@ import {
   Layers,
   Menu,
   Network,
+  Workflow,
   X,
 } from "lucide-react";
 import type { CourseMode } from "./lab";
@@ -20,42 +21,50 @@ import DataFlow from "./pages/DataFlow";
 import Versions from "./pages/Versions";
 import Statistics from "./pages/Statistics";
 import Roadmap from "./pages/Roadmap";
+import Simulation from "./pages/Simulation";
+import { newRun, type SimulationCourse } from "./simulation";
 const pages = [
   {
     id: "concepts",
-    title: "Из чего состоит",
-    sub: "Атомы → целое",
+    title: "Building blocks",
+    sub: "Atoms → whole",
     icon: Boxes,
   },
   {
     id: "ecosystems",
-    title: "Где это живёт",
-    sub: "Системы и границы",
+    title: "Systems & connections",
+    sub: "Roles and boundaries",
     icon: Network,
   },
   {
     id: "data",
-    title: "Как идут данные",
-    sub: "От источника до метрики",
+    title: "How data flows",
+    sub: "From source to metric",
     icon: Database,
   },
   {
     id: "versions",
-    title: "Как работают версии",
-    sub: "Релизы, планы, история",
+    title: "How versions work",
+    sub: "Releases, tracks, history",
     icon: GitBranch,
   },
   {
     id: "statistics",
-    title: "Что покажет статистика",
-    sub: "Попробовать на примере",
+    title: "Explore statistics",
+    sub: "Try the examples",
     icon: ChartNoAxesCombined,
   },
   {
     id: "mvp",
-    title: "Как растёт MVP",
-    sub: "Возможности по шагам",
+    title: "MVP roadmap",
+    sub: "Capabilities, step by step",
     icon: Layers,
+  },
+  {
+    id: "simulation",
+    title: "Learning journey",
+    sub: "Triggers and data in motion",
+    icon: Workflow,
   },
 ];
 const legacy: Record<string, string> = {
@@ -76,17 +85,33 @@ function getRoute() {
 }
 export default function App() {
   const [route, setRoute] = useState(getRoute),
-    [mode, setMode] = useState<CourseMode>("ai"),
+    [mode, setMode] = useState<CourseMode>(() =>
+      getRoute().page === "simulation" && getRoute().detail === "java"
+        ? "java"
+        : "ai",
+    ),
     [open, setOpen] = useState(false);
   useEffect(() => {
     const handler = () => {
-      setRoute(getRoute());
+      const next = getRoute();
+      setRoute(next);
+      if (next.page === "simulation")
+        setMode((m) =>
+          next.detail === "java"
+            ? "java"
+            : next.detail === "ai"
+              ? "ai"
+              : m === "java"
+                ? "java"
+                : "ai",
+        );
       setOpen(false);
       window.scrollTo(0, 0);
     };
     window.addEventListener("hashchange", handler);
     return () => window.removeEventListener("hashchange", handler);
   }, []);
+  const [runs, setRuns] = useState(() => ({ ai: newRun(), java: newRun() }));
   const [platform, setPlatform] = useState(createPlatform);
   const updateCard = (card: Card) =>
     setPlatform((p) => ({
@@ -96,7 +121,7 @@ export default function App() {
   const cards = platform[mode];
   const index = pages.findIndex((p) => p.id === route.page);
   useEffect(() => {
-    document.title = `${pages[index].title} — Learning Atlas`;
+    document.title = `${pages[index].title} — LearningAtlas`;
   }, [index]);
   return (
     <div className="app">
@@ -108,7 +133,8 @@ export default function App() {
           document.getElementById("main-content")?.focus();
         }}
       >
-        Перейти к содержимому
+        {" "}
+        Skip to content{" "}
       </a>
       <aside className={`sidebar ${open ? "open" : ""}`}>
         <a className="brand" href="#concepts">
@@ -117,11 +143,11 @@ export default function App() {
           </span>
           <strong>
             learning<span>atlas</span>
-            <small>АРХИТЕКТУРА В СХЕМАХ</small>
+            <small> ARCHITECTURE IN DIAGRAMS </small>
           </strong>
         </a>
-        <div className="guide-label">ПОНИМАТЬ ПО ШАГАМ</div>
-        <nav aria-label="Разделы концепции">
+        <div className="guide-label"> UNDERSTAND, STEP BY STEP </div>
+        <nav aria-label="Architecture chapters">
           {pages.map((p, i) => (
             <a
               key={p.id}
@@ -139,23 +165,22 @@ export default function App() {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <span className="demo-badge">Интерактивная модель</span>
+          <span className="demo-badge"> Interactive model </span>
           <p>
-            Нажимайте на блоки.
-            <br />
-            Меняйте условия.
-            <br />
-            Смотрите, что меняется.
+            {" "}
+            Select a block. <br /> Change a condition. <br /> See what
+            changes.{" "}
           </p>
-          <a href="#statistics">
-            Сразу к примеру статистики <ArrowRight size={14} />
+          <a href="#simulation">
+            {" "}
+            Try the learning journey <ArrowRight size={14} />
           </a>
         </div>
       </aside>
       {open && (
         <button
           className="menu-backdrop"
-          aria-label="Закрыть меню"
+          aria-label="Close menu"
           onClick={() => setOpen(false)}
         />
       )}
@@ -164,34 +189,49 @@ export default function App() {
           <div>
             <button
               className="mobile-menu"
-              aria-label={open ? "Закрыть меню" : "Открыть меню"}
+              aria-label={open ? "Close menu" : "Open menu"}
               aria-expanded={open}
               onClick={() => setOpen(!open)}
             >
               {open ? <X size={21} /> : <Menu size={21} />}
             </button>
-            <span className="crumb">Концепция /</span>
+            <span className="crumb"> Concept / </span>
             <strong>{pages[index].title}</strong>
           </div>
           <label>
-            Тип курса
+            {" "}
+            Course type{" "}
             <select
-              aria-label="Тип курса"
+              aria-label="Course type"
               value={mode}
-              onChange={(e) => setMode(e.target.value as CourseMode)}
+              onChange={(e) => {
+                setMode(e.target.value as CourseMode);
+                if (route.page === "simulation")
+                  location.hash = `#simulation/${e.target.value}`;
+              }}
             >
-              {modes.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.label}
-                </option>
-              ))}
+              {modes
+                .filter(
+                  (m) =>
+                    route.page !== "simulation" ||
+                    m.id === "ai" ||
+                    m.id === "java",
+                )
+                .map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.label}
+                  </option>
+                ))}
             </select>
           </label>
         </header>
         <main id="main-content" tabIndex={-1}>
           <div className="model-banner">
-            <span>Модель для обсуждения · DEMO</span>
-            <small>Источники не подключены. Все примеры синтетические.</small>
+            <span> Architecture concept · DEMO </span>
+            <small>
+              {" "}
+              No live connections. All examples use synthetic data.{" "}
+            </small>
           </div>
           <div key={`${route.page}-${mode}`}>
             {route.page === "concepts" && <Foundations detail={route.detail} />}
@@ -216,13 +256,33 @@ export default function App() {
               />
             )}
             {route.page === "mvp" && <Roadmap />}
+            {route.page === "simulation" && (
+              <Simulation
+                course={mode === "java" ? "java" : "ai"}
+                run={runs[mode === "java" ? "java" : "ai"]}
+                onChange={(run) =>
+                  setRuns((r) => ({
+                    ...r,
+                    [mode === "java" ? "java" : "ai"]: run,
+                  }))
+                }
+                setCourse={(course: SimulationCourse) => {
+                  setMode(course);
+                  location.hash = `#simulation/${course}`;
+                }}
+                onInspect={(card) => {
+                  updateCard(card);
+                  location.hash = "#statistics/S-1";
+                }}
+              />
+            )}
           </div>
           <div className="page-pagination">
             {index > 0 ? (
               <a href={`#${pages[index - 1].id}`}>
                 <ArrowLeft size={17} />
                 <span>
-                  <small>НАЗАД</small>
+                  <small> BACK </small>
                   {pages[index - 1].title}
                 </span>
               </a>
@@ -232,7 +292,7 @@ export default function App() {
             {index < pages.length - 1 && (
               <a href={`#${pages[index + 1].id}`}>
                 <span>
-                  <small>ДАЛЬШЕ</small>
+                  <small> NEXT </small>
                   {pages[index + 1].title}
                 </span>
                 <ArrowRight size={17} />
@@ -240,21 +300,22 @@ export default function App() {
             )}
           </div>
           <footer>
-            <span>Learning Atlas · от учебной задачи к проверяемому числу</span>
+            <span>
+              {" "}
+              LearningAtlas · from a learning task to a traceable metric{" "}
+            </span>
             <details>
               <summary>
-                Исходные материалы · архив первоначального проекта
+                {" "}
+                Reference materials · original project archive{" "}
               </summary>
               <div>
                 {[
-                  ["Архитектура", "01-architecture.md"],
-                  ["План реализации", "02-implementation-plan.md"],
-                  ["Контракты", "03-data-contracts.md"],
-                  ["UI исходного проекта", "04-product-ui.md"],
-                  [
-                    "Проверки и открытые вопросы",
-                    "05-testing-and-decisions.md",
-                  ],
+                  ["Architecture", "01-architecture.md"],
+                  ["Implementation plan", "02-implementation-plan.md"],
+                  ["Data contracts", "03-data-contracts.md"],
+                  ["Original product UI", "04-product-ui.md"],
+                  ["Testing and open decisions", "05-testing-and-decisions.md"],
                 ].map(([label, file]) => (
                   <a
                     key={file}

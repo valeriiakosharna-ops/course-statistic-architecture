@@ -64,10 +64,10 @@ export default function Versions({
   const applied = card.learner.version >= target;
   const requiredTarget = after.tasks.filter((t) => t.required);
   const coverage = [
-    { label: "Совместимая часть", action: "carry", color: "var(--blue-ink)" },
-    { label: "Повторить", action: "repeat", color: "var(--red)" },
-    { label: "Дополнить", action: "supplement", color: "var(--red-ink)" },
-    { label: "Новое", action: "new", color: "var(--ink)" },
+    { label: "Compatible portion", action: "carry", color: "var(--blue-ink)" },
+    { label: "Repeat", action: "repeat", color: "var(--red)" },
+    { label: "Supplement", action: "supplement", color: "var(--red-ink)" },
+    { label: "New", action: "new", color: "var(--ink)" },
   ].map((part) => ({
     ...part,
     count: requiredTarget.filter(
@@ -87,7 +87,7 @@ export default function Versions({
         ),
       );
       setFeedback(
-        "Переход сохранён одной транзакцией. История сохранена, доставка в GitLab и Moodle ожидает job.",
+        "Migration saved atomically. History retained; GitLab and Moodle delivery is queued.",
       );
     } catch (e) {
       setFeedback((e as Error).message);
@@ -99,22 +99,22 @@ export default function Versions({
     onChange(next);
     setFeedback(
       failGitlab
-        ? "Moodle обновлён. GitLab недоступен: закрепление в БД сохранено, job повторит доставку."
-        : "Проекции GitLab и Moodle синхронизированы с БД.",
+        ? "Moodle updated. GitLab unavailable: the database pin is retained and delivery will retry."
+        : "GitLab and Moodle projections are synchronized with the database.",
     );
   }
   return (
     <>
       <Heading
-        kicker="04 / ТЕГ → МАНИФЕСТ → ЗАКРЕПЛЕНИЕ → ПЕРЕХОД"
-        title="Версия меняется по правилам, а не по возрасту"
-        sub="Критичность задаёт манифест. Новый тег сам по себе не меняет курс действующего студента."
+        kicker="04 / TAG → MANIFEST → PIN → MIGRATION"
+        title="Versions change by policy, not by age"
+        sub="The manifest defines critical differences. A new tag does not silently change an existing student's course."
       />
       <div className="lab-controls">
         <label>
-          Чья версия и учебный трек
+          Whose version and learning track
           <select
-            aria-label="Студент для перехода"
+            aria-label="Student to migrate"
             value={student}
             onChange={(e) => {
               setStudent(e.target.value);
@@ -131,39 +131,36 @@ export default function Versions({
           </select>
         </label>
       </div>
-      <Section number="А" title="Как курс становится опубликованной версией">
-        <Flow label="Публикация курса">
+      <Section number="A" title="How a course becomes a published release">
+        <Flow label="Course publication">
           {[
             <Block
-              title="GitLab: тег course-v3"
-              sub="Код и материалы зафиксированы commit SHA"
+              title="GitLab: tag course-v3"
+              sub="Code and materials fixed by commit SHA"
             />,
             <Block
-              title="CI проверяет манифест"
-              sub="Стабильные activity_id · полная карта перехода"
+              title="CI validates manifest"
+              sub="Stable activity_id values · complete mapping"
               tone="blue"
             />,
             <Block
-              title="Неизменяемая сборка"
-              sub="HTML + manifest + хеши → защищённый доступ"
+              title="Immutable build"
+              sub="HTML + manifest + hashes → protected delivery"
             />,
             <Block
-              title="Job → БД"
-              sub="Релиз опубликован; доступны правила v1 → v3"
+              title="Job → database"
+              sub="Release published; v1 → v3 rules available"
               tone="dark"
             />,
           ]}
         </Flow>
         <Hint>
-          Тег защищён от перезаписи. Правка опубликованной версии выпускается
-          новым тегом. У сборки, манифеста и критериев оценки — свои
-          идентификаторы; источник решения всегда можно восстановить.
+          Published tags are protected from rewriting. Corrections require a new
+          tag. The build, manifest and assessment criteria have their own
+          identifiers, making every decision traceable.
         </Hint>
       </Section>
-      <Section
-        number="Б"
-        title="Первый старт закрепляет актуальную версию один раз"
-      >
+      <Section number="B" title="First activity pins the latest release once">
         <div className="lab-controls">
           <button
             className="button primary"
@@ -171,84 +168,83 @@ export default function Versions({
               setNewLock((existing) => pinVersion(existing, published))
             }
           >
-            Первая / повторная активность нового студента
+            New student's first / repeat activity
           </button>
           <button
             className="button secondary"
             disabled={published === 3}
             onClick={() => setPublished(3)}
           >
-            Опубликовать v3 в примере старта
+            Publish v3 in the start example
           </button>
         </div>
-        <Flow label="Закрепление нового студента">
+        <Flow label="New student version pin">
           {[
             <Block
-              title={`Актуальная: v${published}`}
-              sub="Последний разрешённый релиз"
+              title={`Latest: v${published}`}
+              sub="Latest approved release"
             />,
             <Block
               title={
                 newLock === null
-                  ? "Студент ещё не начал"
-                  : `Закреплено v${newLock}`
+                  ? "Student has not started"
+                  : `Pinned v${newLock}`
               }
-              sub="Уникально: student_id + course_id"
+              sub="Unique: student_id + course_id"
               tone="dark"
             />,
             <Block
-              title="Повторный вход"
-              sub="Всегда читает существующее закрепление"
+              title="Repeat visit"
+              sub="Always reads the existing pin"
               tone="blue"
             />,
           ]}
         </Flow>
         <Hint>
-          Плагин Moodle вызывает создание закрепления в БД при первой учебной
-          активности. Транзакция и уникальный ключ защищают от двух
-          одновременных стартов. Эта миниатюра независима от выбранной карточки
-          ниже.
+          At the first learning activity, a Moodle plugin requests a database
+          pin. A transaction and unique key protect concurrent starts. This
+          miniature example is separate from the selected student record below.
         </Hint>
       </Section>
       <Section
-        number="В"
-        title="Манифест объясняет совместимость по каждой активности"
+        number="C"
+        title="The manifest explains compatibility for each activity"
       >
         <div className="lab-controls">
           <label>
-            Сравнить с версией
+            Compare with version
             <select
-              aria-label="Целевая версия курса"
+              aria-label="Target course version"
               value={target}
               onChange={(e) => {
                 setTarget(Number(e.target.value));
                 setFeedback("");
               }}
             >
-              <option value="2">v2 · редактура, некритично</option>
-              <option value="3">v3 · новые критерии, критично</option>
+              <option value="2">v2 · editorial, non-critical</option>
+              <option value="3">v3 · new criteria, critical</option>
             </select>
           </label>
           <span className={`badge ${manifest.critical ? "red" : "blue"}`}>
             {applied
-              ? "Эта версия уже пройдена или закреплена"
+              ? "This version is already pinned or superseded"
               : manifest.critical
-                ? "Критическое отличие по манифесту"
-                : "Совместимый релиз · можно остаться"}
+                ? "Critical difference in the manifest"
+                : "Compatible release · staying is allowed"}
           </span>
         </div>
         <div className="version-summary">
           <div>
-            <span>{card.learner.name} · карточка БД</span>
+            <span>{card.learner.name} · database record</span>
             <strong data-testid="old-version">
-              Закреплено v{card.learner.version}
+              Pinned v{card.learner.version}
             </strong>
             <small>
-              Трек R{card.revision} · актуальная v{latestVersion}
+              Track R{card.revision} · latest v{latestVersion}
             </small>
           </div>
           <div>
-            <span>Переход</span>
+            <span>Transition</span>
             <strong>
               v{manifest.from} → v{manifest.to}
             </strong>
@@ -257,7 +253,7 @@ export default function Versions({
             </small>
           </div>
           <div>
-            <span>Перезачёт совместимых</span>
+            <span>Compatible credit</span>
             <strong>
               {
                 manifest.mappings.filter(
@@ -267,15 +263,15 @@ export default function Versions({
                       "accepted",
                 ).length
               }{" "}
-              активностей
+              activities
             </strong>
-            <small>Из принятых результатов текущего трека</small>
+            <small>From accepted results in the current track</small>
           </div>
         </div>
         {!applied && (
           <div className="coverage-panel">
             <span className="eyebrow">
-              СКОЛЬКО НОВОГО ТРЕКА ПОКРЫВАЕТ ПРЕЖНЯЯ ВЕРСИЯ
+              HOW MUCH OF THE TARGET TRACK THE PREVIOUS VERSION COVERS
             </span>
             <div
               className="coverage-bar"
@@ -307,13 +303,13 @@ export default function Versions({
               ))}
             </div>
             <small>
-              Это совместимость содержания, а не сданные работы студента. Его
-              фактически принятый прогресс показан отдельно ниже.
+              This shows content compatibility, not the student's completed
+              work. Actual accepted progress is shown separately below.
             </small>
           </div>
         )}
         <details className="reference">
-          <summary>Как выглядит манифест · пример JSON</summary>
+          <summary>Manifest format · example JSON</summary>
           <pre>
             {JSON.stringify(
               {
@@ -326,7 +322,7 @@ export default function Versions({
                 assessment_from: "assessment@1",
                 assessment_to: target === 3 ? "assessment@2" : "assessment@1",
                 mappings: manifest.mappings.slice(0, 6),
-                note: "Остальные ID также перечисляются явно; в примере показан фрагмент.",
+                note: "All other IDs are also mapped explicitly; this is an excerpt.",
               },
               null,
               2,
@@ -339,15 +335,15 @@ export default function Versions({
               className="table-scroll"
               tabIndex={0}
               role="region"
-              aria-label="Правила переноса активностей"
+              aria-label="Activity migration rules"
             >
               <table>
                 <thead>
                   <tr>
-                    <th>Активность</th>
-                    <th>Решение манифеста</th>
-                    <th>Почему</th>
-                    <th>В целевом треке</th>
+                    <th>Activity</th>
+                    <th>Manifest decision</th>
+                    <th>Reason</th>
+                    <th>In the target track</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -366,14 +362,14 @@ export default function Versions({
                         <td>{m.reason}</td>
                         <td>
                           {m.action === "retire"
-                            ? "Удалена; история остаётся"
+                            ? "Removed; history retained"
                             : m.action === "repeat"
-                              ? "Новая попытка по новым критериям"
+                              ? "New attempt under new criteria"
                               : m.action === "supplement"
-                                ? "Сдать только добавленную часть"
+                                ? "Submit only the added portion"
                                 : m.action === "new"
-                                  ? "Новое назначение"
-                                  : "Принятое зачтётся, несданное останется"}
+                                  ? "New assignment"
+                                  : "Carry accepted credit; pending stays pending"}
                         </td>
                       </tr>
                     ))}
@@ -381,44 +377,43 @@ export default function Versions({
               </table>
             </div>
             <small className="table-caption">
-              Первые 6 активностей и все новые; остальные{" "}
-              {Math.max(0, card.learner.tasks.length - 6)} имеют явное правило
-              «перезачесть». Новая активность наследует обязательность
-              заменённой TASK-05; дедлайн назначается отдельно.
+              First 6 activities and all new ones; the remaining{" "}
+              {Math.max(0, card.learner.tasks.length - 6)} have explicit
+              carry-over rules. The new activity inherits TASK-05's required
+              status; its deadline is assigned separately.
             </small>
             <div className="migration-score">
               <div>
-                <span>СЕЙЧАС · v{card.learner.version}</span>
+                <span>NOW · v{card.learner.version}</span>
                 <strong>
                   {beforeMetrics.accepted}/{beforeMetrics.total}
                 </strong>
                 <small>
-                  {fmt(beforeMetrics.percent, "%")} назначенного веса
+                  {fmt(beforeMetrics.percent, "%")} of assigned weight
                 </small>
               </div>
               <span>→</span>
               <div>
-                <span>ПОСЛЕ ПЕРЕХОДА · v{target}</span>
+                <span>AFTER MIGRATION · v{target}</span>
                 <strong>
                   {afterMetrics.accepted}/{afterMetrics.total}
                 </strong>
-                <small>{fmt(afterMetrics.percent, "%")} нового трека</small>
+                <small>{fmt(afterMetrics.percent, "%")} of the new track</small>
               </div>
             </div>
           </>
         )}
         <Hint>
-          «Дополнить» оставляет старую попытку в истории и назначает недостающую
-          часть; текущая активность будет принята после её сдачи. «Повторить»
-          требует новой попытки. Перезачёт сохраняет основание и совместимые
-          баллы, но не создаёт выдуманную попытку Moodle. Для скачка v1 → v3
-          нужна явная карта v1 → v3: совместимость соседних версий не
-          предполагается транзитивной.
+          “Supplement” retains the previous attempt in history and assigns only
+          the missing work. “Repeat” requires a new attempt. Carry-over keeps
+          evidence and compatible scores without fabricating a Moodle attempt. A
+          v1 → v3 jump needs an explicit v1 → v3 mapping; compatibility is not
+          assumed to be transitive.
         </Hint>
       </Section>
-      <Section number="Г" title="Ручное решение или настроенная автоматика">
+      <Section number="D" title="Manual decisions or configured automation">
         <Graph
-          title="Блок-схема решения о переходе"
+          title="Version migration decision flow"
           height={450}
           nodes={[
             {
@@ -426,16 +421,16 @@ export default function Versions({
               x: 25,
               y: 170,
               w: 200,
-              title: "Job: сверить манифест",
-              sub: "v студента → актуальный тег",
+              title: "Job: compare manifest",
+              sub: "student version → latest tag",
             },
             {
               id: "critical",
               x: 330,
               y: 170,
               w: 230,
-              title: "Изменения критичны?",
-              sub: "по правилам, не по номеру",
+              title: "Critical changes?",
+              sub: "by rule, not version number",
               tone: "red",
             },
             {
@@ -443,16 +438,16 @@ export default function Versions({
               x: 730,
               y: 30,
               w: 280,
-              title: "Остаться на версии",
-              sub: "новый тег не меняет прогресс",
+              title: "Stay on the pinned version",
+              sub: "a new tag leaves progress unchanged",
             },
             {
               id: "decision",
               x: 730,
               y: 170,
               w: 280,
-              title: "LearningAtlas: подсветить",
-              sub: "ручное решение / автополитика",
+              title: "LearningAtlas: highlight",
+              sub: "manual decision / automatic policy",
               tone: "red",
             },
             {
@@ -460,31 +455,31 @@ export default function Versions({
               x: 730,
               y: 340,
               w: 280,
-              title: "БД: версия + трек + история",
-              sub: "одна транзакция + очередь доставки",
+              title: "DB: version + track + history",
+              sub: "one transaction + delivery queue",
               tone: "dark",
             },
           ]}
           edges={[
-            { from: "compare", to: "critical", label: "проверить" },
-            { from: "critical", to: "stay", label: "нет" },
-            { from: "critical", to: "decision", label: "да" },
-            { from: "decision", to: "commit", label: "условия выполнены" },
+            { from: "compare", to: "critical", label: "check" },
+            { from: "critical", to: "stay", label: "no" },
+            { from: "critical", to: "decision", label: "yes" },
+            { from: "decision", to: "commit", label: "conditions satisfied" },
           ]}
         />
         <div className="lab-controls">
           <label>
-            Режим
+            Mode
             <select
-              aria-label="Режим перехода"
+              aria-label="Migration mode"
               value={automatic ? "auto" : "manual"}
               onChange={(e) => {
                 setAutomatic(e.target.value === "auto");
                 setAuthorized(false);
               }}
             >
-              <option value="manual">Ручной · преподаватель</option>
-              <option value="auto">Автоматический · policy@1</option>
+              <option value="manual">Manual · instructor</option>
+              <option value="auto">Automatic · policy@1</option>
             </select>
           </label>
           <label>
@@ -494,8 +489,8 @@ export default function Versions({
               onChange={(e) => setAuthorized(e.target.checked)}
             />
             {automatic
-              ? "Владелец разрешил автополитику"
-              : "Уполномоченный преподаватель подтвердил переход"}
+              ? "Course owner enabled automatic policy"
+              : "Authorized instructor approved migration"}
           </label>
           {automatic && (
             <label>
@@ -504,7 +499,7 @@ export default function Versions({
                 checked={allowNew}
                 onChange={(e) => setAllowNew(e.target.checked)}
               />
-              Разрешены повторные и новые задания
+              Allow repeated and new assignments
             </label>
           )}
         </div>
@@ -515,7 +510,7 @@ export default function Versions({
               checked={incomplete}
               onChange={(e) => setIncomplete(e.target.checked)}
             />
-            В манифесте не хватает сопоставления
+            Manifest mapping is incomplete
           </label>
           <label>
             <input
@@ -523,24 +518,24 @@ export default function Versions({
               checked={stale}
               onChange={(e) => setStale(e.target.checked)}
             />
-            Данные студента устарели
+            Student data is stale
           </label>
         </div>
         <div className="compact-inspector" aria-live="polite">
           <strong>
             {applied
-              ? "Переход уже не требуется"
+              ? "No migration needed"
               : block
-                ? "Переход остановлен"
-                : "Условия выполнены"}
+                ? "Migration blocked"
+                : "Conditions satisfied"}
           </strong>
           <span>
             {applied
-              ? "Можно открыть статистику или синхронизировать проекции ниже."
+              ? "Open statistics or synchronize the projections below."
               : (block ??
                 (automatic
-                  ? "Job может применить переход по policy@1 без отдельного решения на каждого студента."
-                  : "Преподаватель может сохранить показанный предпросмотр."))}
+                  ? "A job can apply policy@1 without a separate decision for each student."
+                  : "The instructor can save the displayed preview."))}
           </span>
         </div>
         <button
@@ -549,14 +544,14 @@ export default function Versions({
           onClick={apply}
         >
           {applied
-            ? "Версия уже закреплена"
+            ? "Version already pinned"
             : automatic
-              ? "Выполнить автоматический переход"
-              : "Утвердить переход вручную"}
+              ? "Run automatic migration"
+              : "Approve manual migration"}
         </button>
         <div className="local-message" role="status">
           {feedback ||
-            "Кнопка меняет общую демо-карточку. История и статистика доступны в других разделах до перезагрузки сайта."}
+            "This changes the shared demo record. History and statistics remain available across chapters until the page reloads."}
         </div>
         <div className="history-strip">
           {card.history.map((h) => (
@@ -565,47 +560,47 @@ export default function Versions({
                 R{h.revision} · v{h.learner.version}:{" "}
                 {metrics([h.learner]).accepted}/{metrics([h.learner]).total}
               </strong>
-              <span>{h.reason} · прежние попытки и оценки сохранены</span>
+              <span>{h.reason} · previous attempts and grades retained</span>
             </div>
           ))}
           <div>
             <strong>
-              Текущая R{card.revision} · v{card.learner.version}
+              Current R{card.revision} · v{card.learner.version}
             </strong>
             <a href={`#statistics/${card.learner.id}`}>
-              Открыть эту карточку в статистике →
+              Open this student record in statistics →
             </a>
           </div>
         </div>
         {card.audit.length > 0 && (
           <details className="reference">
-            <summary>Аудит решений · {card.audit.length}</summary>
+            <summary>Decision audit · {card.audit.length}</summary>
             <pre>{JSON.stringify(card.audit, null, 2)}</pre>
           </details>
         )}
       </Section>
       <Section
-        number="Д"
-        title="Доставка версии: БД — основа, GitLab и Moodle — проекции"
+        number="E"
+        title="Version delivery: database authority, GitLab and Moodle projections"
       >
-        <Flow label="Согласование систем после решения">
+        <Flow label="Reconcile systems after a decision">
           {[
             <Block
-              title={`БД: R${card.revision}`}
-              sub={`v${card.learner.version} · решение зафиксировано`}
+              title={`Database: R${card.revision}`}
+              sub={`v${card.learner.version} · decision committed`}
               tone="dark"
             />,
             <Block
-              title="Очередь доставки · outbox"
-              sub={`${card.outbox.filter((o) => !o.materials || !o.moodle).length} изменений ждут подтверждения`}
+              title="Delivery queue · outbox"
+              sub={`${card.outbox.filter((o) => !o.materials || !o.moodle).length} updates awaiting acknowledgement`}
             />,
             <Block
               title={`GitLab: R${card.mirrors.materials}`}
-              sub="Защищённый документ закреплений"
+              sub="Protected version pin document"
             />,
             <Block
               title={`Moodle: R${card.mirrors.moodle}`}
-              sub="Версия и личный трек"
+              sub="Version and personal track"
               tone="blue"
             />,
           ]}
@@ -617,15 +612,15 @@ export default function Versions({
               checked={failGitlab}
               onChange={(e) => setFailGitlab(e.target.checked)}
             />
-            GitLab недоступен при доставке
+            GitLab unavailable during delivery
           </label>
           <button className="button secondary" onClick={synchronize}>
-            Синхронизировать GitLab и Moodle
+            Synchronize GitLab and Moodle
           </button>
         </div>
         <div className="json-panel">
           <span>
-            Проекция student-course-versions.json · пример без имён и оценок
+            student-course-versions.json projection · no names or grades
           </span>
           <pre>
             {JSON.stringify(
@@ -637,7 +632,7 @@ export default function Versions({
                 course_tag:
                   card.mirrors.materials === card.revision
                     ? `course-v${card.learner.version}`
-                    : "прежний тег; обновление ожидается",
+                    : "previous tag; update pending",
                 access: "private; only service account",
               },
               null,
@@ -646,16 +641,16 @@ export default function Versions({
           </pre>
         </div>
         <Hint>
-          Команда LearningAtlas содержит ожидаемую revision и уникальный
-          request_id. БД сохраняет изменение и outbox вместе; job повторяет
-          неудачную доставку. Повтор команды не создаёт ещё один перенос,
-          запоздалое событие не откатывает новую revision. Moodle и GitLab не
-          должны независимо выбирать студенту новую версию.
+          LearningAtlas commands include an expected revision and unique
+          request_id. The database saves the change and outbox together; jobs
+          retry failed delivery. Duplicate commands do not repeat the migration,
+          and delayed events cannot roll a projection back. Moodle and GitLab do
+          not independently choose a new version.
         </Hint>
       </Section>
       <Section
-        number="Е"
-        title="Что увидит студент, если компонент доставки недоступен"
+        number="F"
+        title="What happens if the delivery component is unavailable"
       >
         <div className="simulation-controls">
           <label>
@@ -664,7 +659,7 @@ export default function Versions({
               checked={!available}
               onChange={(e) => setAvailable(!e.target.checked)}
             />
-            Компонент доставки недоступен
+            Delivery component unavailable
           </label>
           <label>
             <input
@@ -674,15 +669,15 @@ export default function Versions({
                 setCacheRevision(e.target.checked ? card.revision : null)
               }
             />
-            Есть проверенный кеш текущего закрепления
+            Verified cache of the current pin exists
           </label>
         </div>
         <div className="compact-inspector">
-          <strong>{path ? `Открыть ${path}` : "Не запускать урок"}</strong>
+          <strong>{path ? `Open ${path}` : "Do not launch the lesson"}</strong>
           <span>
             {path
-              ? "Проверенное закрепление; артефакт выдаётся только после проверки доступа."
-              : "Нет доступного закрепления. Просим повторить позже; не подставляем latest."}
+              ? "Verified pin; access is checked before serving the artifact."
+              : "No available verified pin. Retry later; never substitute latest."}
           </span>
         </div>
       </Section>

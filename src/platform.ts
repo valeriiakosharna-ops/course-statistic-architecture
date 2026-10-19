@@ -18,63 +18,64 @@ export const systems: {
 }[] = [
   {
     id: "materials",
-    title: "GitLab · материалы",
-    role: "Теги, сборки, манифест",
+    title: "GitLab · materials",
+    role: "Tags, builds, manifest",
     format: "Git tag + commit SHA · manifest.json · HTML",
     method:
-      "CI проверяет манифест → собирает неизменяемый артефакт; job читает релизы",
-    owns: "Содержание и совместимость версий. Закрепления студентов — защищённая копия из БД.",
+      "CI validates the manifest → builds an immutable artifact; a job reads releases",
+    owns: "Course content and version compatibility. Student version pins are a protected projection of the database.",
   },
   {
     id: "moodle",
     title: "Moodle",
-    role: "Учёба и первая активность",
-    format: "Web Services JSON · события плагина · ссылки",
+    role: "Learning and first activity",
+    format: "Web Services JSON · plugin events · links",
     method:
-      "Плагин фиксирует старт; API/job забирает попытки, баллы и завершения",
-    owns: "Попытки тестов, завершения теории, сдачи ссылок на практику.",
+      "A plugin records the start; an API job collects attempts, scores and completions",
+    owns: "Quiz attempts, theory completion and practical submission links.",
   },
   {
     id: "work",
-    title: "GitLab · студенты",
-    role: "Код, MR, проверки, Comment",
-    format: "REST JSON · webhook · diff · CI-результат",
+    title: "GitLab · students",
+    role: "Code, MRs, checks, comments",
+    format: "REST JSON · webhook · diff · CI result",
     method:
-      "Webhook ускоряет доставку; регулярная сверка API восполняет пропуски",
-    owns: "Код и review. Merge сам по себе не равен зачёту задания.",
+      "Webhooks speed up delivery; scheduled API reconciliation recovers missed events",
+    owns: "Code and review. Merging an MR does not automatically award activity credit.",
   },
   {
     id: "sheets",
     title: "Google Spreadsheet",
-    role: "Назначения, сроки, оценки",
-    format: "Sheets API: строки → типизированный JSON · CSV",
-    method: "Job читает диапазон со стабильным row_id; сверяет хеш строки",
-    owns: "Утверждённые строки: student/group, activity_id, deadline, grade, revision.",
+    role: "Assignments, deadlines, grades",
+    format: "Sheets API: rows → typed JSON · CSV",
+    method:
+      "A job reads a range using stable row_id values and checks each row hash",
+    owns: "Approved rows: student/group, activity_id, deadline, grade, revision.",
   },
   {
     id: "discord",
     title: "Discord",
-    role: "Уточнения по заданиям и срокам",
-    format: "message_id · channel_id · автор · текст · edited_at",
-    method: "Бот: Gateway-события + REST-сверка доступных учебных каналов",
-    owns: "Исходное сообщение и кандидат уточнения. Право автора и правило курса проверяются отдельно.",
+    role: "Task and deadline clarifications",
+    format: "message_id · channel_id · author · text · edited_at",
+    method:
+      "Bot: Gateway events + REST reconciliation of accessible course channels",
+    owns: "The original message and a proposed clarification. Author permissions and course policy are checked separately.",
   },
   {
     id: "db",
-    title: "База Данных",
-    role: "Единая карточка студента",
-    format: "raw → факты → назначения → карточки → снимки",
-    method:
-      "Транзакции, уникальные ключи, история и очередь доставки изменений",
-    owns: "Закреплённая версия, действующий трек, решения, связи и расчётный прогресс.",
+    title: "Database",
+    role: "Canonical student record",
+    format: "raw → facts → assignments → records → snapshots",
+    method: "Transactions, unique keys, history and an update delivery queue",
+    owns: "Pinned version, active track, decisions, links and calculated progress.",
   },
   {
     id: "atlas",
     title: "LearningAtlas",
-    role: "Статистика и решения",
-    format: "API карточек · команды с revision и request_id",
-    method: "Студент / группа / курс; ручное решение или настроенное правило",
-    owns: "Интерфейс решения. Сохраняет команду в БД, не ведёт отдельную копию истины.",
+    role: "Statistics and decisions",
+    format: "Student record API · commands with revision and request_id",
+    method: "Student / group / course; manual decisions or configured rules",
+    owns: "The decision interface. Commands are saved to the database, which remains authoritative.",
   },
 ];
 
@@ -89,194 +90,198 @@ export type Term = {
 export const vocabulary: Term[] = [
   {
     id: "theory",
-    name: "Теория",
-    definition: "Материал, который нужно изучить.",
-    example: "Прочитать объяснение циклов.",
+    name: "Theory",
+    definition: "Learning material a student needs to study.",
+    example: "Read an explanation of loops.",
     level: 0,
-    lives: "GitLab материалов → Moodle",
+    lives: "Course materials GitLab → Moodle",
   },
   {
     id: "practice",
-    name: "Практика",
-    definition: "Задание, в котором студент применяет знания.",
-    example: "Написать программу и сдать ссылку.",
+    name: "Practice",
+    definition: "A task in which a student applies knowledge.",
+    example: "Write a program and submit its link.",
     level: 0,
-    lives: "Moodle + GitLab студентов",
+    lives: "Moodle + student GitLab",
   },
   {
     id: "test",
-    name: "Тест",
-    definition: "Проверка знаний с вопросами и правилами оценки.",
-    example: "5 вопросов, максимум 10 баллов.",
+    name: "Quiz",
+    definition: "A knowledge check with questions and grading rules.",
+    example: "5 questions, up to 10 points.",
     level: 0,
     lives: "Moodle",
   },
   {
     id: "activity",
-    name: "Активность",
+    name: "Activity",
     definition:
-      "Отдельное отслеживаемое действие в курсе: теория, практика или тест.",
-    example: "activity_id=TASK-03; вид=тест.",
+      "One individually tracked learning action: theory, practice or a quiz.",
+    example: "activity_id=TASK-03; kind=quiz.",
     level: 1,
-    lives: "Moodle ↔ карточка в БД",
+    lives: "Moodle ↔ database student record",
   },
   {
     id: "unit",
-    name: "Юнит",
-    definition: "Небольшая тема, объединяющая несколько активностей.",
-    example: "«Циклы»: теория + тест + практика.",
+    name: "Unit",
+    definition: "A small topic containing several activities.",
+    example: "“Loops”: theory + quiz + practice.",
     level: 1,
-    lives: "Структура курса в GitLab и Moodle",
+    lives: "Course structure in GitLab and Moodle",
   },
   {
     id: "module",
-    name: "Модуль",
-    definition: "Раздел курса, состоящий из юнитов.",
-    example: "«Основы программирования»: 4 юнита.",
+    name: "Module",
+    definition: "A course section made up of units.",
+    example: "“Programming fundamentals”: 4 units.",
     level: 1,
-    lives: "Структура курса в GitLab и Moodle",
+    lives: "Course structure in GitLab and Moodle",
   },
   {
     id: "version",
-    name: "Версия курса",
-    definition: "Зафиксированная сборка содержания и правил курса по тегу.",
-    example: "course-v3 → commit SHA → HTML + манифест.",
+    name: "Course version",
+    definition: "A tagged, immutable build of course content and rules.",
+    example: "course-v3 → commit SHA → HTML + manifest.",
     level: 2,
-    lives: "GitLab материалов; закрепление — в БД",
+    lives: "Materials GitLab; version pin in the database",
   },
   {
     id: "track",
-    name: "Учебный трек",
+    name: "Learning track",
     definition:
-      "Конкретный набор обязательных активностей студента, их сроки и правила.",
-    example: "Из каталога 40 активностей назначены 30.",
+      "A student's specific required activities, deadlines and completion rules.",
+    example: "30 activities assigned from a catalog of 40.",
     level: 2,
-    lives: "Sheets / LearningAtlas → БД → Moodle",
+    lives: "Sheets / LearningAtlas → database → Moodle",
   },
   {
     id: "manifest",
-    name: "Манифест",
+    name: "Manifest",
     definition:
-      "Правила перехода между версиями: что зачесть, дополнить, повторить или назначить впервые.",
-    example: "v1 → v3: TASK-01 зачесть, TASK-03 повторить.",
+      "Version transition rules: what to carry over, supplement, repeat or assign for the first time.",
+    example: "v1 → v3: carry TASK-01 credit, repeat TASK-03.",
     level: 2,
-    lives: "Версионируемый файл в GitLab материалов",
+    lives: "A versioned file in the course materials GitLab",
   },
   {
     id: "attempt",
-    name: "Попытка",
-    definition: "Одна сдача теста или задания; не обязательно успешная.",
-    example: "Попытка №2, 8 из 10; политика выбирает лучшую.",
+    name: "Attempt",
+    definition: "One submission of a quiz or task; it may be unsuccessful.",
+    example: "Attempt #2, 8/10; the policy selects the best attempt.",
     level: 3,
-    lives: "Moodle; практические сдачи — также GitLab",
+    lives: "Moodle; practical submissions also use GitLab",
   },
   {
     id: "point",
-    name: "Балл",
-    definition: "Численная оценка с максимумом и правилом выставления.",
-    example: "8 / 10 по рубрике assessment@1.",
+    name: "Score",
+    definition: "A numeric grade with a maximum and an assessment rule.",
+    example: "8 / 10 under rubric assessment@1.",
     level: 3,
-    lives: "Moodle / утверждённая Sheets-оценка → БД",
+    lives: "Moodle / approved Sheets correction → database",
   },
   {
     id: "deadline",
-    name: "Дедлайн",
-    definition: "Крайний срок конкретного назначения с часовым поясом.",
+    name: "Deadline",
+    definition: "The cutoff time for a specific assignment, with a time zone.",
     example: "20.10, 23:59 Europe/Kyiv = 20:59 UTC.",
     level: 3,
-    lives: "Sheets; подтверждённое уточнение из Discord → БД",
+    lives: "Sheets; a confirmed Discord clarification → database",
   },
   {
     id: "pr",
     name: "PR",
-    definition: "Pull Request: предложение изменений; термин GitHub.",
-    example: "В GitLab эквивалент называется MR.",
+    definition: "Pull Request: a proposed change; the GitHub term.",
+    example: "The GitLab equivalent is called an MR.",
     level: 3,
-    lives: "GitHub; в этой архитектуре используем MR",
+    lives: "GitHub; this architecture uses MRs",
   },
   {
     id: "mr",
     name: "MR",
-    definition: "Merge Request: предложение объединить изменения в GitLab.",
-    example: "MR !42 связан с TASK-01 и TASK-02.",
+    definition: "Merge Request: a proposal to merge changes in GitLab.",
+    example: "MR !42 is linked to TASK-01 and TASK-02.",
     level: 3,
-    lives: "GitLab студентов; связь с заданиями — в БД",
+    lives: "Student GitLab; task links in the database",
   },
   {
     id: "comment",
     name: "Comment",
-    definition: "Комментарий к работе или обсуждению; сам по себе не оценка.",
-    example: "«Добавь тест граничного случая» к MR !42.",
+    definition:
+      "Feedback on a submission or discussion; not a grade by itself.",
+    example: "“Add an edge case test” on MR !42.",
     level: 3,
-    lives: "GitLab / Discord → БД с автором и ссылкой",
+    lives: "GitLab / Discord → database with author and source link",
   },
   {
     id: "card",
-    name: "Карточка студента",
+    name: "Student record",
     definition:
-      "Связанные данные одного человека по курсу: версия, трек, результаты и история решений.",
-    example: "S-1 · v1 · R1 · 20/30 · нужна смена версии.",
+      "One person's linked course data: version, track, results and decision history.",
+    example: "S-1 · v1 · R1 · 20/30 · version migration needed.",
     level: 4,
-    lives: "База Данных → LearningAtlas",
+    lives: "Database → LearningAtlas",
   },
   {
     id: "moodle",
     name: "Moodle",
-    definition: "Платформа, где студент проходит назначенные активности.",
-    example: "Каталог может быть шире личного трека.",
+    definition: "The platform where students complete assigned activities.",
+    example: "Its catalog can be larger than a personal track.",
     level: 5,
-    lives: "Система 1",
+    lives: "System 1",
   },
   {
     id: "gitlab",
     name: "GitLab",
-    definition: "Два раздельных контура: материалы курса и работы студентов.",
-    example: "Тег курса ≠ ветка со студенческим решением.",
+    definition: "Two separate roles: course materials and student work.",
+    example: "A course tag ≠ a branch containing a student's solution.",
     level: 5,
-    lives: "Системы 2 и 3",
+    lives: "Systems 2 and 3",
   },
   {
     id: "spreadsheet",
     name: "Google Spreadsheet",
-    definition: "Таблица назначений, дедлайнов и, при настройке, оценок.",
-    example: "Строка: группа A, TASK-21, срок, revision.",
+    definition:
+      "A spreadsheet for assignments, deadlines and, when configured, grades.",
+    example: "Row: group A, TASK-21, deadline, revision.",
     level: 5,
-    lives: "Система 4",
+    lives: "System 4",
   },
   {
     id: "discord",
     name: "Discord",
-    definition: "Учебные чаты с уточнениями заданий и сроков.",
-    example: "«Для группы A срок TASK-21 перенесён».",
+    definition: "Course chats containing task and deadline clarifications.",
+    example: "“The TASK-21 deadline has changed for group A.”",
     level: 5,
-    lives: "Система 5",
+    lives: "System 5",
   },
   {
     id: "db",
-    name: "База Данных",
-    definition: "Хранилище исходников, фактов, связей, карточек и истории.",
-    example: "Один студент связан с аккаунтами всех источников.",
+    name: "Database",
+    definition:
+      "Storage for source data, facts, links, student records and history.",
+    example: "One student is linked to accounts across all sources.",
     level: 5,
-    lives: "Система 6",
+    lives: "System 6",
   },
   {
     id: "atlas",
     name: "LearningAtlas",
-    definition: "Сайт статистики и назначения треков / смены версии курса.",
-    example: "Отчёт по студенту, группе и всему курсу.",
+    definition:
+      "A site for statistics, track assignment and course version decisions.",
+    example: "Reports for a student, a group and the entire course.",
     level: 5,
-    lives: "Система 7",
+    lives: "System 7",
   },
 ];
 
 export type MappingAction =
   "carry" | "repeat" | "supplement" | "retire" | "new";
 export const actionLabels: Record<MappingAction, string> = {
-  carry: "Перезачесть",
-  repeat: "Повторить",
-  supplement: "Дополнить",
-  retire: "Убрать из трека",
-  new: "Назначить новое",
+  carry: "Carry over",
+  repeat: "Repeat",
+  supplement: "Supplement",
+  retire: "Remove from track",
+  new: "Assign new",
 };
 export type Manifest = {
   from: number;
@@ -314,14 +319,14 @@ export function manifestFor(
                 : "carry") as MappingAction,
         reason:
           target <= learner.version || target === 2
-            ? "Редактура, критерии сохранены"
+            ? "Editorial changes; assessment criteria unchanged"
             : t.id === "TASK-03"
-              ? "Новые обязательные критерии"
+              ? "New mandatory assessment criteria"
               : t.id === "TASK-04"
-                ? "Добавлен проверяемый навык"
+                ? "An additional skill must be demonstrated"
                 : t.id === "TASK-05"
-                  ? "Активность заменена новой"
-                  : "Содержание и критерии совместимы",
+                  ? "Replaced by a new activity"
+                  : "Content and assessment criteria are compatible",
       })),
       ...(target > learner.version &&
       target === 3 &&
@@ -330,7 +335,7 @@ export function manifestFor(
             {
               id: "NEW-01",
               action: "new" as const,
-              reason: "Новая активность вместо TASK-05",
+              reason: "New activity replacing TASK-05",
             },
           ]
         : []),
@@ -355,7 +360,7 @@ export function createCard(learner: Learner): Card {
   return {
     learner,
     revision: 1,
-    trackSource: "Начальный трек курса",
+    trackSource: "Initial course track",
     history: [],
     audit: [],
     mirrors: { materials: 1, moodle: 1 },
@@ -399,7 +404,7 @@ export function preview(card: Card, manifest: Manifest): Learner {
   for (const mapping of manifest.mappings.filter((m) => m.action === "new")) {
     if (!tasks.some((t) => t.id === mapping.id))
       tasks.push({
-        kind: "Практика",
+        kind: "Practice",
         id: mapping.id,
         required:
           card.learner.tasks.find((t) => t.id === "TASK-05")?.required ?? true,
@@ -427,10 +432,10 @@ export function migrationBlock(
   manifest: Manifest,
   policy: Policy,
 ): string | null {
-  if (!policy.authorized) return "Нет права изменять версию";
+  if (!policy.authorized) return "No permission to change the version";
   if (card.learner.version !== manifest.from || manifest.to <= manifest.from)
-    return "Закрепление уже изменилось";
-  if (!manifest.approved) return "Манифест не утверждён";
+    return "The pinned version has already changed";
+  if (!manifest.approved) return "The manifest is not approved";
   if (
     !manifest.complete ||
     new Set(manifest.mappings.map((m) => m.id)).size !==
@@ -439,8 +444,8 @@ export function migrationBlock(
       (t) => !manifest.mappings.some((m) => m.id === t.id),
     )
   )
-    return "Нет полного сопоставления активностей";
-  if (!policy.fresh) return "Данные устарели: сначала синхронизация";
+    return "The activity mapping is incomplete or ambiguous";
+  if (!policy.fresh) return "Student data is stale: synchronize first";
   if (
     policy.automatic &&
     !policy.allowNewWork &&
@@ -448,7 +453,7 @@ export function migrationBlock(
       ["repeat", "supplement", "new"].includes(m.action),
     )
   )
-    return "Автополитика запрещает новые обязательства";
+    return "The automatic policy does not allow new obligations";
   return null;
 }
 function commit(
@@ -485,15 +490,15 @@ export function migrate(
 ): Card {
   if (card.audit.some((a) => a.requestId === requestId)) return card;
   if (card.revision !== expectedRevision)
-    throw new Error("Карточка изменилась: обновите предпросмотр");
+    throw new Error("The student record changed: refresh the preview");
   const block = migrationBlock(card, manifest, policy);
   if (block) throw new Error(block);
   return commit(
     card,
     preview(card, manifest),
-    `Переход v${manifest.from} → v${manifest.to}`,
+    `Migration v${manifest.from} → v${manifest.to}`,
     requestId,
-    policy.automatic ? "policy@1" : "Преподаватель",
+    policy.automatic ? "policy@1" : "Instructor",
     manifest.hash,
   );
 }
@@ -520,16 +525,16 @@ export function assignTrack(
       card,
       { ...card.learner, tasks },
       kind === "individual"
-        ? "Индивидуальный трек: первые 4 активности"
-        : "Групповой шаблон трека",
+        ? "Individual track: first 4 activities"
+        : "Group track template",
       requestId,
-      kind === "group" ? "group-rule@1" : "Преподаватель",
+      kind === "group" ? "group-rule@1" : "Instructor",
       null,
     ),
     trackSource:
       kind === "individual"
-        ? "LearningAtlas · ручное назначение"
-        : "Google Spreadsheet · правило группы",
+        ? "LearningAtlas · manual assignment"
+        : "Google Spreadsheet · group rule",
   };
 }
 export function acceptPractice(card: Card, taskId: string): Card {
@@ -543,9 +548,9 @@ export function acceptPractice(card: Card, taskId: string): Card {
         t.id === taskId ? { ...t, status: "accepted", score: null } : t,
       ),
     },
-    `Зачёт ${taskId}`,
+    `Credit awarded for ${taskId}`,
     `accept-${taskId}`,
-    "Преподаватель",
+    "Instructor",
     null,
   );
 }
@@ -586,11 +591,11 @@ export function clarifyDeadline(card: Card): Card {
         t.id === "TASK-01" ? { ...t, due: "2026-10-22T20:59:00Z" } : t,
       ),
     },
-    "Discord message-105: teacher-7, группа A, Europe/Kyiv",
+    "Discord message-105: teacher-7, group A, Europe/Kyiv",
     requestId,
-    "Преподаватель",
+    "Instructor",
     null,
   );
 }
 export const taskKind = (task: StudentTask) =>
-  task.kind ?? (task.source === "GitLab" ? "Практика" : "Тест");
+  task.kind ?? (task.source === "GitLab" ? "Practice" : "Quiz");

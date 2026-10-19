@@ -9,12 +9,12 @@ import {
 } from "../components/Diagram";
 import { vocabulary } from "../platform";
 const levels = [
-  ["01", "Что делает студент", "Три вида учебной работы"],
-  ["02", "Как собран курс", "Активность → юнит → модуль"],
-  ["03", "Что назначено", "Версия, трек и правила перехода"],
-  ["04", "Что зафиксировано", "Результаты, сроки и подтверждения"],
-  ["05", "Что видит преподаватель", "Всё связано в карточке"],
-  ["06", "Где это существует", "Платформы — отдельная ветка понятий"],
+  ["01", "What a student does", "Three kinds of learning work"],
+  ["02", "How a course is built", "Activity → unit → module"],
+  ["03", "What is assigned", "Version, track and transition rules"],
+  ["04", "What is recorded", "Results, deadlines and evidence"],
+  ["05", "What an instructor sees", "Everything linked in a student record"],
+  ["06", "Where it lives", "Platforms form a separate branch of concepts"],
 ];
 export default function Foundations({ detail }: { detail: string }) {
   const [selected, setSelected] = useState("theory"),
@@ -28,9 +28,9 @@ export default function Foundations({ detail }: { detail: string }) {
   return (
     <>
       <Heading
-        kicker="01 / СЛОВАРЬ · 22 ПОНЯТИЯ"
-        title="От одного действия — к целому курсу"
-        sub="Нажмите на понятие. Ниже — как содержание, назначения и результаты связаны друг с другом."
+        kicker="01 / GLOSSARY · 22 CONCEPTS"
+        title="From one action to a complete course"
+        sub="Select a term. The diagrams connect content, assignments and results."
       />
       <div className="concept-levels">
         {levels.map(([n, name, sub], level) => (
@@ -63,34 +63,34 @@ export default function Foundations({ detail }: { detail: string }) {
       </div>
       <div className="concept-inspector" aria-live="polite">
         <div>
-          <span className="eyebrow">ПОНЯТИЕ</span>
+          <span className="eyebrow">CONCEPT</span>
           <h3>{term.name}</h3>
           <p>{term.definition}</p>
         </div>
         <div>
-          <span className="eyebrow">НА ПРИМЕРЕ</span>
+          <span className="eyebrow">EXAMPLE</span>
           <strong>{term.example}</strong>
           <small>{term.lives}</small>
         </div>
       </div>
       <label className="glossary-search">
-        Найти термин{" "}
+        Find a term{" "}
         <input
-          aria-label="Найти термин"
+          aria-label="Find a term"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Например: манифест"
+          placeholder="For example: manifest"
         />
       </label>
       <Section
-        number="А"
-        title="Три разных отношения: состоит / назначено / выполнено"
+        number="A"
+        title="Three relationships: contains / assigned / completed"
       >
-        <div className="tabs" aria-label="Связи понятий">
+        <div className="tabs" aria-label="Concept relationships">
           {[
-            ["structure", "Как собран курс"],
-            ["track", "Что нужно студенту"],
-            ["result", "Как появляется результат"],
+            ["structure", "How a course is built"],
+            ["track", "What the student needs"],
+            ["result", "How a result appears"],
           ].map(([id, label]) => (
             <button
               key={id}
@@ -104,7 +104,7 @@ export default function Foundations({ detail }: { detail: string }) {
         </div>
         {view === "structure" && (
           <Graph
-            title="Структура содержания · части входят в целое"
+            title="Content structure · parts belong to a whole"
             height={410}
             selected={selected}
             onSelect={setSelected}
@@ -115,31 +115,31 @@ export default function Foundations({ detail }: { detail: string }) {
                 w: 1020,
                 h: 380,
                 title:
-                  "GitLab материалов хранит структуру → Moodle показывает активности",
+                  "Materials GitLab stores the structure → Moodle presents activities",
               },
             ]}
             nodes={[
-              { id: "theory", x: 40, y: 80, title: "Теория", sub: "изучить" },
+              { id: "theory", x: 40, y: 80, title: "Theory", sub: "study" },
               {
                 id: "practice",
                 x: 40,
                 y: 190,
-                title: "Практика",
-                sub: "применить",
+                title: "Practice",
+                sub: "apply",
               },
               {
                 id: "test",
                 x: 40,
                 y: 300,
-                title: "Тест",
-                sub: "проверить знания",
+                title: "Quiz",
+                sub: "check knowledge",
               },
               {
                 id: "activity",
                 x: 315,
                 y: 190,
-                title: "Активность",
-                sub: "один отслеживаемый шаг",
+                title: "Activity",
+                sub: "one tracked step",
                 tone: "blue",
                 w: 195,
               },
@@ -147,29 +147,29 @@ export default function Foundations({ detail }: { detail: string }) {
                 id: "unit",
                 x: 610,
                 y: 190,
-                title: "Юнит",
-                sub: "несколько активностей",
+                title: "Unit",
+                sub: "several activities",
               },
               {
                 id: "module",
                 x: 840,
                 y: 190,
-                title: "Модуль",
-                sub: "несколько юнитов",
+                title: "Module",
+                sub: "several units",
               },
             ]}
             edges={[
-              { from: "theory", to: "activity", label: "вид" },
-              { from: "practice", to: "activity", label: "вид" },
-              { from: "test", to: "activity", label: "вид" },
-              { from: "activity", to: "unit", label: "входит" },
-              { from: "unit", to: "module", label: "входит" },
+              { from: "theory", to: "activity", label: "kind of" },
+              { from: "practice", to: "activity", label: "kind of" },
+              { from: "test", to: "activity", label: "kind of" },
+              { from: "activity", to: "unit", label: "belongs to" },
+              { from: "unit", to: "module", label: "belongs to" },
             ]}
           />
         )}
         {view === "track" && (
           <Graph
-            title="Каталог шире персонального учебного трека"
+            title="The catalog is larger than a personal learning track"
             height={360}
             selected={selected}
             onSelect={setSelected}
@@ -179,16 +179,16 @@ export default function Foundations({ detail }: { detail: string }) {
                 x: 30,
                 y: 70,
                 w: 215,
-                title: "Версия курса",
-                sub: "каталог: 40 активностей",
+                title: "Course version",
+                sub: "catalog: 40 activities",
               },
               {
                 id: "track",
                 x: 395,
                 y: 70,
                 w: 230,
-                title: "Учебный трек",
-                sub: "S-1: 30 обязательных",
+                title: "Learning track",
+                sub: "S-1: 30 required",
                 tone: "blue",
               },
               {
@@ -196,8 +196,8 @@ export default function Foundations({ detail }: { detail: string }) {
                 x: 800,
                 y: 70,
                 w: 210,
-                title: "Карточка студента",
-                sub: "v1 · трек R1 · 20/30",
+                title: "Student record",
+                sub: "v1 · track R1 · 20/30",
                 tone: "dark",
               },
               {
@@ -205,24 +205,28 @@ export default function Foundations({ detail }: { detail: string }) {
                 x: 395,
                 y: 240,
                 w: 230,
-                title: "Манифест",
-                sub: "переход v1 → v3",
+                title: "Manifest",
+                sub: "transition v1 → v3",
               },
             ]}
             edges={[
-              { from: "version", to: "track", label: "выбрать нужное" },
-              { from: "track", to: "card", label: "назначить" },
+              {
+                from: "version",
+                to: "track",
+                label: "select relevant activities",
+              },
+              { from: "track", to: "card", label: "assign" },
               {
                 from: "manifest",
                 to: "track",
-                label: "перенести при смене версии",
+                label: "transfer on migration",
               },
             ]}
           />
         )}
         {view === "result" && (
           <Graph
-            title="Результат и срок относятся к назначению студента"
+            title="A result and deadline belong to a student's assignment"
             height={420}
             selected={selected}
             onSelect={setSelected}
@@ -231,57 +235,57 @@ export default function Foundations({ detail }: { detail: string }) {
                 id: "activity",
                 x: 30,
                 y: 180,
-                title: "Активность",
-                sub: "назначена S-1",
+                title: "Activity",
+                sub: "assigned to S-1",
               },
               {
                 id: "attempt",
                 x: 335,
                 y: 60,
-                title: "Попытка",
-                sub: "одна сдача",
+                title: "Attempt",
+                sub: "one submission",
               },
-              { id: "point", x: 630, y: 60, title: "Балл", sub: "8 / 10" },
+              { id: "point", x: 630, y: 60, title: "Score", sub: "8 / 10" },
               {
                 id: "mr",
                 x: 335,
                 y: 180,
                 title: "MR",
-                sub: "практическое решение",
+                sub: "practical solution",
               },
               {
                 id: "comment",
                 x: 630,
                 y: 180,
                 title: "Comment",
-                sub: "замечание к работе",
+                sub: "feedback on the work",
               },
               {
                 id: "deadline",
                 x: 335,
                 y: 310,
-                title: "Дедлайн",
-                sub: "срок назначения",
+                title: "Deadline",
+                sub: "assignment cutoff",
               },
               {
                 id: "card",
                 x: 850,
                 y: 180,
                 w: 175,
-                title: "Карточка студента",
-                sub: "связи + принятый итог",
+                title: "Student record",
+                sub: "links + accepted result",
                 tone: "dark",
               },
             ]}
             edges={[
-              { from: "activity", to: "attempt", label: "сдать" },
-              { from: "attempt", to: "point", label: "оценить" },
-              { from: "activity", to: "mr", label: "подтвердить кодом" },
-              { from: "mr", to: "comment", label: "обсудить" },
-              { from: "activity", to: "deadline", label: "назначить срок" },
-              { from: "point", to: "card", label: "учесть" },
-              { from: "comment", to: "card", label: "сохранить" },
-              { from: "deadline", to: "card", label: "проверить вовремя ли" },
+              { from: "activity", to: "attempt", label: "submit" },
+              { from: "attempt", to: "point", label: "grade" },
+              { from: "activity", to: "mr", label: "provide code evidence" },
+              { from: "mr", to: "comment", label: "discuss" },
+              { from: "activity", to: "deadline", label: "set deadline" },
+              { from: "point", to: "card", label: "include" },
+              { from: "comment", to: "card", label: "save" },
+              { from: "deadline", to: "card", label: "check timeliness" },
             ]}
           />
         )}
@@ -290,31 +294,31 @@ export default function Foundations({ detail }: { detail: string }) {
           <span>{term.definition}</span>
         </div>
       </Section>
-      <Section number="Б" title="Один учебный день — одна цепочка">
-        <Flow label="От активности к статистике">
+      <Section number="B" title="One learning day, one connected flow">
+        <Flow label="From activity to statistics">
           {[
             <Block
-              title="Теория → тест → практика"
-              sub="Активности внутри юнита"
+              title="Theory → quiz → practice"
+              sub="Activities within a unit"
             />,
             <Block
-              title="Трек S-1, версия v1"
-              sub="Назначены именно эти активности"
+              title="S-1 track, version v1"
+              sub="These specific activities are assigned"
               tone="blue"
             />,
-            <Block title="Попытка + MR + балл" sub="Факты выполнения" />,
+            <Block title="Attempt + MR + score" sub="Completion evidence" />,
             <Block
-              title="Карточка → LearningAtlas"
-              sub="Прогресс по назначенному треку"
+              title="Student record → LearningAtlas"
+              sub="Progress against the assigned track"
               tone="dark"
             />,
           ]}
         </Flow>
       </Section>
       <Hint>
-        Здесь юнит — небольшая тема, модуль — набор юнитов. Балл и попытка
-        описывают результат; они не являются частями учебного содержания. PR —
-        термин GitHub, в двух контурах GitLab используется MR.
+        Here, a unit is a small topic and a module groups units. Scores and
+        attempts describe results, not content structure. PR is the GitHub term;
+        both GitLab systems use MR.
       </Hint>
     </>
   );

@@ -2,65 +2,65 @@ import { useState } from "react";
 import { Block, Flow, Heading, Hint, Section } from "../components/Diagram";
 const stages = [
   {
-    name: "Надёжная основа",
-    flow: "GitLab материалов + Moodle → БД",
-    title: "MVP 1 · Версия и личная карточка",
-    metrics: "Теория, тесты, попытки, баллы, личный прогресс",
+    name: "Reliable foundation",
+    flow: "Materials GitLab + Moodle → database",
+    title: "MVP 1 · Version and personal record",
+    metrics: "Theory, quizzes, attempts, scores, personal progress",
     check:
-      "Первая активность закрепляет тег; повторная загрузка не удваивает результат",
-    adds: "Стабильные ID, манифест, личный трек, исходники и история",
+      "First activity pins a tag; repeated ingestion never doubles a result",
+    adds: "Stable IDs, manifest, personal track, source data and history",
     complexity: 1,
   },
   {
-    name: "Треки и группы",
-    flow: "Sheets → назначения и сроки → БД",
-    title: "MVP 2 · Разные обязательства и дедлайны",
+    name: "Tracks and groups",
+    flow: "Sheets → assignments and deadlines → database",
+    title: "MVP 2 · Individual obligations and deadlines",
     metrics:
-      "Студент / группа / курс; сдачи в срок, просрочка, покрытие оценок",
-    check: "Групповой шаблон и личное исключение дают объяснимый знаменатель",
-    adds: "Табличные назначения, правила приоритета, ручное управление в LearningAtlas",
+      "Student / group / course; timeliness, overdue work, grading coverage",
+    check:
+      "Group templates and personal exceptions produce an explainable denominator",
+    adds: "Spreadsheet assignments, precedence rules and manual controls in LearningAtlas",
     complexity: 2,
   },
   {
-    name: "Практика в GitLab",
-    flow: "MR + CI + review → подтверждения",
-    title: "MVP 3 · Практические работы и проверка",
+    name: "Practice in GitLab",
+    flow: "MR + CI + review → evidence",
+    title: "MVP 3 · Practical work and assessment",
     metrics:
-      "Сдано / на review / принято; замечания и активность в репозитории",
-    check: "Несколько MR одной задачи не создают несколько зачётов",
-    adds: "Связь задач с MR и коммитами, автоматические тесты, отдельное решение о зачёте",
+      "Submitted / under review / accepted; feedback and repository activity",
+    check: "Several MRs for one activity do not create several credits",
+    adds: "MR and commit links, automated tests, separate credit decisions",
     complexity: 3,
   },
   {
-    name: "Уточнения Discord",
-    flow: "Сообщение → кандидат → решение → БД",
-    title: "MVP 4 · Все семь систем в одном контуре",
+    name: "Discord clarifications",
+    flow: "Message → proposal → decision → database",
+    title: "MVP 4 · All seven systems connected",
     metrics:
-      "Актуальные сроки, история уточнений, конфликты и свежесть источников",
+      "Current deadlines, clarification history, conflicts and source freshness",
     check:
-      "Перенос срока имеет автора, цитату, область действия и подтверждённое основание",
-    adds: "Discord-бот, структурированные команды; ИИ для свободного текста",
+      "A deadline change has an author, quotation, scope and approved basis",
+    adds: "Discord bot, structured commands; AI for free text",
     complexity: 3,
   },
   {
-    name: "Миграции",
-    flow: "Манифест → предпросмотр → решение",
-    title: "MVP 5 · Контролируемые миграции",
+    name: "Migrations",
+    flow: "Manifest → preview → decision",
+    title: "MVP 5 · Controlled migrations",
     metrics:
-      "Критически устаревшие версии, покрытие новым курсом, новые обязательства",
+      "Critically outdated versions, target course coverage and new obligations",
     check:
-      "Старая история воспроизводима; сбой GitLab не отменяет решение в БД",
-    adds: "Ручной переход, перезачёт, очередь доставки и точная сборка в Moodle",
+      "Old history remains reproducible; a GitLab outage does not undo a database decision",
+    adds: "Manual migration, credit transfer, delivery queue and exact Moodle builds",
     complexity: 4,
   },
   {
-    name: "Управляемая автоматика",
-    flow: "Политика → job → аудит результата",
-    title: "MVP 6 · Автотреки, автопереходы и помощь ИИ",
-    metrics:
-      "Решения по правилам, исключения для преподавателя, качество AI-review",
-    check: "Неполный манифест или неясный результат идут на сверку",
-    adds: "Настраиваемый автоматический перенос, Claude Code по рубрике, мониторинг качества",
+    name: "Governed automation",
+    flow: "Policy → job → decision audit",
+    title: "MVP 6 · Automatic tracks, migrations and AI assistance",
+    metrics: "Rule-based decisions, instructor exceptions, AI review quality",
+    check: "Incomplete manifests and unclear results go to review",
+    adds: "Configurable automatic migration, rubric-based Claude Code review, quality monitoring",
     complexity: 5,
   },
 ];
@@ -70,9 +70,9 @@ export default function Roadmap() {
   return (
     <>
       <Heading
-        kicker="06 / ПОСТЕПЕННОЕ НАПОЛНЕНИЕ"
-        title="От личного прогресса к управлению обучением"
-        sub="Каждая версия сохраняет предыдущие возможности и добавляет следующий источник или уровень автоматизации."
+        kicker="06 / PROGRESSIVE CAPABILITIES"
+        title="From personal progress to learning decisions"
+        sub="Each MVP retains previous capabilities and adds another source or level of automation."
       />
       <div className="mvp-staircase">
         {stages.map((item, i) => (
@@ -90,7 +90,7 @@ export default function Roadmap() {
             </div>
             <span
               className="mvp-complexity"
-              aria-label={`Сложность ${item.complexity} из 5`}
+              aria-label={`Complexity ${item.complexity} of 5`}
             >
               {"●".repeat(item.complexity)}
               {"○".repeat(5 - item.complexity)}
@@ -99,43 +99,43 @@ export default function Roadmap() {
         ))}
       </div>
       <Section number={`0${selected + 1}`} title={s.title}>
-        <Flow label="Результат выбранного MVP">
+        <Flow label="Selected MVP outcome">
           {[
-            <Block title="Добавляем" sub={s.adds} />,
-            <Block title="Теперь видно" sub={s.metrics} tone="blue" />,
-            <Block title="Критерий готовности" sub={s.check} tone="dark" />,
+            <Block title="Add" sub={s.adds} />,
+            <Block title="Now visible" sub={s.metrics} tone="blue" />,
+            <Block title="Readiness criterion" sub={s.check} tone="dark" />,
           ]}
         </Flow>
       </Section>
-      <Section number="↗" title="Два конвейера развиваются вместе">
+      <Section number="↗" title="Two pipelines develop together">
         <div className="architecture-pair">
           <div>
-            <span className="eyebrow">УЧЕБНЫЕ ДАННЫЕ</span>
-            <Flow label="Развитие статистики">
+            <span className="eyebrow">LEARNING DATA</span>
+            <Flow label="Statistics evolution">
               {[
                 <Block
                   title="Moodle → Sheets → GitLab → Discord"
-                  sub="Общий формат карточки с первого MVP"
+                  sub="One student record format from the first MVP"
                 />,
                 <Block
-                  title="БД → LearningAtlas"
-                  sub="Студент, затем группа и весь курс"
+                  title="Database → LearningAtlas"
+                  sub="Student, then group and entire course"
                   tone="dark"
                 />,
               ]}
             </Flow>
           </div>
           <div>
-            <span className="eyebrow">ВЕРСИИ И УПРАВЛЕНИЕ</span>
-            <Flow label="Развитие версионирования">
+            <span className="eyebrow">VERSIONS AND DECISIONS</span>
+            <Flow label="Versioning evolution">
               {[
                 <Block
-                  title="Теги + закрепления с MVP 1"
-                  sub="Каталог и история сразу версионируются"
+                  title="Tags + pins from MVP 1"
+                  sub="Catalog and history are versioned from day one"
                 />,
                 <Block
-                  title="Ручной → автоматический перенос"
-                  sub="MVP 5–6: по утверждённой карте манифеста"
+                  title="Manual → automatic migration"
+                  sub="MVPs 5–6: approved manifest mappings"
                   tone="blue"
                 />,
               ]}
@@ -144,11 +144,11 @@ export default function Roadmap() {
         </div>
       </Section>
       <Hint>
-        Семь систем — целевая архитектура. Подключения включаются по типу курса:
-        для курса без кода не нужен поток студенческих MR. Discord остаётся
-        частью модели; на первом этапе уточнения можно вводить через
-        LearningAtlas вручную со ссылкой на сообщение. Сложность относительная,
-        без обещаний по срокам.
+        Seven systems form the target architecture. Enable connections by course
+        type: a course without code does not need student MR ingestion. Discord
+        remains in the model; early MVPs can record clarifications manually in
+        LearningAtlas with a source link. Complexity is relative, without
+        delivery-date estimates.
       </Hint>
     </>
   );

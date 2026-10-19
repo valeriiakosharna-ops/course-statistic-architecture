@@ -18,6 +18,7 @@ export type GraphEdge = {
   to: string;
   label: string;
   dashed?: boolean;
+  active?: boolean;
 };
 export type GraphZone = {
   x: number;
@@ -35,8 +36,10 @@ export function Graph({
   height = 400,
   selected,
   onSelect,
+  motion = false,
 }: {
   title: string;
+  motion?: boolean;
   nodes: GraphNode[];
   edges: GraphEdge[];
   zones?: GraphZone[];
@@ -47,17 +50,17 @@ export function Graph({
   const id = useId().replaceAll(":", "");
   const [zoom, setZoom] = useState(100);
   return (
-    <div className="graph-shell">
+    <div className={`graph-shell ${motion ? "has-flow-motion" : ""}`}>
       <div className="graph-toolbar">
         <span>{title}</span>
         <div>
           <small>
             {onSelect
-              ? "Нажмите на блок · схему можно двигать"
-              : "Стрелки показывают связи · схему можно двигать"}
+              ? "Select a block · scroll to explore"
+              : "Arrows show relationships · scroll to explore"}
           </small>
           <button
-            aria-label="Уменьшить схему"
+            aria-label="Zoom out"
             onClick={() => setZoom(Math.max(80, zoom - 10))}
             disabled={zoom === 80}
           >
@@ -65,7 +68,7 @@ export function Graph({
           </button>
           <span>{zoom}%</span>
           <button
-            aria-label="Увеличить схему"
+            aria-label="Zoom in"
             onClick={() => setZoom(Math.min(150, zoom + 10))}
             disabled={zoom === 150}
           >
@@ -140,7 +143,8 @@ export function Graph({
             const path = vertical
               ? `M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`
               : `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
-            const active = selected === e.from || selected === e.to;
+            const active =
+              e.active ?? (selected === e.from || selected === e.to);
             const limit = vertical
               ? 25
               : Math.max(

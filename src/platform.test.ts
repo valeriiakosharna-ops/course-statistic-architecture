@@ -84,7 +84,7 @@ describe("Version pinning, manifest and credit transfer", () => {
     const c = card(),
       m = manifestFor(c.learner),
       automatic = { ...policy, automatic: true };
-    expect(migrationBlock(c, m, automatic)).toContain("новые обязательства");
+    expect(migrationBlock(c, m, automatic)).toContain("new obligations");
     expect(
       migrationBlock(c, m, { ...automatic, allowNewWork: true }),
     ).toBeNull();
@@ -124,7 +124,7 @@ describe("Version pinning, manifest and credit transfer", () => {
     expect(migrate(next, m, policy, 1, "move-1")).toBe(next);
     expect(() =>
       migrate(assignTrack(c, "individual", "track"), m, policy, 1, "stale"),
-    ).toThrow("Карточка изменилась");
+    ).toThrow("The student record changed");
   });
 });
 describe("Projections, delivery and track decisions", () => {
