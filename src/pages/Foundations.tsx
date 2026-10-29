@@ -8,6 +8,7 @@ import {
   Section,
 } from "../components/Diagram";
 import { vocabulary } from "../platform";
+import { searchableText } from "../i18n";
 const levels = [
   ["01", "What a student does", "Three kinds of learning work"],
   ["02", "How a course is built", "Activity → unit → module"],
@@ -46,7 +47,9 @@ export default function Foundations({ detail }: { detail: string }) {
                   (t) =>
                     t.level === level &&
                     (!search ||
-                      t.name.toLowerCase().includes(search.toLowerCase())),
+                      searchableText([t.name]).includes(
+                        search.toLocaleLowerCase("uk"),
+                      )),
                 )
                 .map((t) => (
                   <button

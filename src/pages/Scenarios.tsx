@@ -9,6 +9,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { Block, Flow, Heading } from "../components/Diagram";
+import { getLanguage, translateText } from "../i18n";
 import {
   emptyScenarioFilters,
   filterScenarios,
@@ -23,25 +24,29 @@ import {
 
 function downloadCatalogue() {
   const content = [
-    "# Learning scenarios — discovery catalogue",
-    "Real-world situations and open policy choices. Architecture coverage has not been assessed. This catalogue is a starting set, not an exhaustive enumeration of every combination.",
+    translateText("# Learning scenarios — discovery catalogue"),
+    translateText(
+      "Real-world situations and open policy choices. Architecture coverage has not been assessed. This catalogue is a starting set, not an exhaustive enumeration of every combination.",
+    ),
     ...scenarioGroups.flatMap((group) => [
-      `## ${group.title}`,
+      `## ${translateText(group.title)}`,
       ...scenarios
         .filter((s) => s.group === group.id)
         .map((s) =>
           [
-            `### ${s.id} — ${s.title}`,
-            `Dimensions: ${s.dimensions.join(", ")}. Type: ${scenarioKindLabels[s.kind]}.`,
+            `### ${s.id} — ${translateText(s.title)}`,
+            `Dimensions: ${s.dimensions.map((d) => translateText(d)).join(", ")}. Type: ${translateText(scenarioKindLabels[s.kind])}.`,
             `Before: ${s.flow[0]}`,
             `Event: ${s.flow[1]}`,
             `Situation: ${s.flow[2]}`,
             `Question: ${s.question}`,
             `Possible choice A: ${s.choices[0]}`,
             `Possible choice B: ${s.choices[1]}`,
-            `Facts to establish: ${s.facts.join("; ")}.`,
+            `Facts to establish: ${s.facts.map((fact) => translateText(fact)).join("; ")}.`,
             `Scenario link: #scenarios/${s.id}`,
-          ].join("\n\n"),
+          ]
+            .map((line) => translateText(line))
+            .join("\n\n"),
         ),
     ]),
   ].join("\n\n");
@@ -50,7 +55,10 @@ function downloadCatalogue() {
   );
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = "learning-scenarios.md";
+  anchor.download =
+    getLanguage() === "uk"
+      ? "learning-scenarios.uk.md"
+      : "learning-scenarios.md";
   anchor.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

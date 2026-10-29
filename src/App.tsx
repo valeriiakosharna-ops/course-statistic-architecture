@@ -1,4 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import {
+  getLanguage,
+  setLanguage,
+  subscribeLanguage,
+  translateText,
+} from "./i18n";
 import {
   ArrowLeft,
   ArrowRight,
@@ -91,6 +97,7 @@ function getRoute() {
   };
 }
 export default function App() {
+  const language = useSyncExternalStore(subscribeLanguage, getLanguage);
   const [route, setRoute] = useState(getRoute),
     [mode, setMode] = useState<CourseMode>(() =>
       getRoute().page === "simulation" && getRoute().detail === "java"
@@ -128,8 +135,9 @@ export default function App() {
   const cards = platform[mode];
   const index = pages.findIndex((p) => p.id === route.page);
   useEffect(() => {
-    document.title = `${pages[index].title} — LearningAtlas`;
-  }, [index]);
+    document.title = `${translateText(pages[index].title)} — LearningAtlas`;
+    document.documentElement.lang = language;
+  }, [index, language]);
   return (
     <div className="app">
       <a
@@ -205,36 +213,58 @@ export default function App() {
             <span className="crumb"> Concept / </span>
             <strong>{pages[index].title}</strong>
           </div>
-          {route.page === "scenarios" ? (
-            <span className="scenario-course-scope">All course types</span>
-          ) : (
-            <label>
-              {" "}
-              Course type{" "}
-              <select
-                aria-label="Course type"
-                value={mode}
-                onChange={(e) => {
-                  setMode(e.target.value as CourseMode);
-                  if (route.page === "simulation")
-                    location.hash = `#simulation/${e.target.value}`;
-                }}
+          <div className="topbar-controls">
+            <div
+              className="language-switch"
+              role="group"
+              aria-label="Site language"
+            >
+              <button
+                lang="en"
+                aria-pressed={language === "en"}
+                onClick={() => setLanguage("en")}
               >
-                {modes
-                  .filter(
-                    (m) =>
-                      route.page !== "simulation" ||
-                      m.id === "ai" ||
-                      m.id === "java",
-                  )
-                  .map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.label}
-                    </option>
-                  ))}
-              </select>
-            </label>
-          )}
+                English
+              </button>
+              <button
+                lang="uk"
+                aria-pressed={language === "uk"}
+                onClick={() => setLanguage("uk")}
+              >
+                {translateText("Ukrainian", "uk")}
+              </button>
+            </div>
+            {route.page === "scenarios" ? (
+              <span className="scenario-course-scope">All course types</span>
+            ) : (
+              <label>
+                {" "}
+                Course type{" "}
+                <select
+                  aria-label="Course type"
+                  value={mode}
+                  onChange={(e) => {
+                    setMode(e.target.value as CourseMode);
+                    if (route.page === "simulation")
+                      location.hash = `#simulation/${e.target.value}`;
+                  }}
+                >
+                  {modes
+                    .filter(
+                      (m) =>
+                        route.page !== "simulation" ||
+                        m.id === "ai" ||
+                        m.id === "java",
+                    )
+                    .map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.label}
+                      </option>
+                    ))}
+                </select>
+              </label>
+            )}
+          </div>
         </header>
         <main id="main-content" tabIndex={-1}>
           <div className="model-banner">
@@ -326,6 +356,8 @@ export default function App() {
               <summary>
                 {" "}
                 Reference materials · original project archive{" "}
+                {language === "uk" &&
+                  translateText("Original English documents")}
               </summary>
               <div>
                 {[

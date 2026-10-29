@@ -243,6 +243,34 @@ p {
 .topbar strong {
   font-weight: 500;
 }
+.topbar > .topbar-controls {
+  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.language-switch {
+  display: flex;
+  align-items: center;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--canvas);
+}
+.language-switch button {
+  min-height: 34px;
+  padding: 7px 10px;
+  font-size: 11px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+}
+.language-switch button[aria-pressed="true"] {
+  color: white;
+  background: var(--blue-ink);
+}
+.language-switch button:focus-visible {
+  outline-offset: 2px;
+}
 .crumb {
   color: var(--muted);
   font-size: 10px;
@@ -2130,6 +2158,16 @@ footer details a {
     gap: 9px;
     font-size: 10px;
     max-width: 55%;
+  }
+  .topbar > .topbar-controls {
+    max-width: 100%;
+    width: 100%;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .language-switch button {
+    min-height: 36px;
+    font-size: 10px;
   }
   .topbar label {
     flex-direction: column;

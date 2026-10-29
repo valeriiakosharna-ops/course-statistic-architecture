@@ -1,3 +1,4 @@
+import { searchableText } from "./i18n";
 export const scenarioGroups = [
   {
     id: "entry",
@@ -1611,11 +1612,11 @@ export const emptyScenarioFilters: ScenarioFilters = {
 export function filterScenarios(filters: ScenarioFilters): Scenario[] {
   const words = filters.query
     .trim()
-    .toLocaleLowerCase("en")
+    .toLocaleLowerCase("uk")
     .split(/\s+/)
     .filter(Boolean);
   return scenarios.filter((s) => {
-    const text = [
+    const text = searchableText([
       s.id,
       s.title,
       ...s.flow,
@@ -1625,9 +1626,7 @@ export function filterScenarios(filters: ScenarioFilters): Scenario[] {
       ...s.dimensions,
       scenarioGroups.find((g) => g.id === s.group)!.title,
       scenarioKindLabels[s.kind],
-    ]
-      .join(" ")
-      .toLocaleLowerCase("en");
+    ]);
     return (
       (filters.group === "all" || s.group === filters.group) &&
       (filters.phase === "all" || s.phase === filters.phase) &&

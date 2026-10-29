@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 import type { ReactNode } from "react";
 import { ArrowDown, ArrowRight, Minus, Plus } from "lucide-react";
+import { translateText } from "../i18n";
 
 export type GraphNode = {
   id: string;
@@ -152,7 +153,7 @@ export function Graph({
                   Math.min(25, Math.floor((Math.abs(x2 - x1) - 12) / 5.4)),
                 );
             const lines: string[] = [];
-            for (const word of e.label.split(" ")) {
+            for (const word of translateText(e.label).split(" ")) {
               if (
                 !lines.length ||
                 lines[lines.length - 1].length + word.length + 1 > limit
