@@ -134,3 +134,11 @@ Code checks run in isolated jobs without production secrets. Automatic credit re
 6. Governed automatic tracks/migration and validated AI assistance.
 
 Before connecting real systems, agree on the first-activity trigger, API coverage/permissions, identity mappings, accepted criteria, weights, source precedence, roles and exception policies. Historical downloads remain reference documents; the original Russian context is archived outside website publication, and the public translation is English.
+
+## Real-world scenario discovery
+
+The separate `#scenarios` chapter collects 64 real-world learning situations across ten groups. It is independent of the seven-system proposal and the two deterministic course simulations. The global course-type control is replaced with an all-course-types label on this page.
+
+Cases describe an initial agreement, an event and the resulting situation. They offer an open policy question, two possible choices and the facts needed for discussion. Choices are illustrative alternatives, not approved rules, automated decisions or claims of architecture support. The catalogue is a starting set; combinations are not exhaustively enumerated.
+
+The page includes a four-cell version/track change map, learning-stage filters, group/dimension/type filters, multiword search, related combinations, stable `#scenarios/<case-id>` links and a complete English Markdown download. No learner records, course versions, tracks, grades or simulations change while exploring it. This catalogue can inform a later review of how well the proposed architecture handles each situation.

@@ -13,6 +13,7 @@ An English, diagram-led concept site for a seven-system learning analytics archi
 5. **Explore statistics** — four course profiles; student, group and course reports; theory/practice/quiz progress, grades, version health and evidence. Linking an MR is distinct from accepting its work.
 6. **MVP roadmap** — six successive releases leading to all seven systems and governed automation.
 7. **Learning journey** — play, step, rewind or jump through Foundations of AI and Java Dual. Each event shows its actor, trigger, directional transfers, example payload, student record changes and event journal. Compare manual approval with an enabled automatic policy, simulate a GitLab delivery failure and retry it.
+8. **Real-world scenarios** — a separate discovery catalogue at `#scenarios`, with 64 cases across 10 groups. Browse ordinary journeys, version/track changes, overruns, live spreadsheet assignments, MR rule violations, assessment, participation, conflicting evidence, completion and overlapping changes. Each case has a before/event/situation diagram, an open question, two possible policies and facts to establish. Search, combine filters, follow deep links or download all cases as English Markdown. Policies remain open and architecture coverage has not been assessed.
 
 The simulator starts before enrollment. Enrollment does not pin a version; the first learning activity does. Java includes Sheets group assignments, MR submission, CI/AI-assisted review, explicit acceptance and Discord deadline clarification. Both courses demonstrate a personal track change, compatible publication, repeat access to the existing pin, critical drift and manifest-based migration.
 
@@ -57,7 +58,7 @@ The repository's Pages source must be **GitHub Actions**. Publishing uses the st
 ```text
 src/App.tsx                 Navigation, course selection, shared demo state
 src/components/Diagram.tsx  Accessible SVG diagrams, zoom and flow direction
-src/pages/                  Seven visual chapters
+src/pages/                  Eight visual chapters
 src/lab.ts                  Synthetic records, ingestion and metrics
 src/platform.ts             Systems, vocabulary, tracks, manifests and delivery
 src/simulation.ts           Deterministic event journeys and replay
