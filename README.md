@@ -1,6 +1,8 @@
 # LearningAtlas — learning analytics architecture
 
-An English, diagram-led concept site for a seven-system learning analytics architecture. Interactive examples use synthetic data; no live Moodle, GitLab, Sheets, Discord or backend connections are made.
+A bilingual English/Ukrainian, diagram-led concept site for a seven-system learning analytics architecture. Interactive examples use synthetic data; no live Moodle, GitLab, Sheets, Discord or backend connections are made.
+
+Use **English / Українська** in the header to switch all eight chapters, diagrams, controls, statistics, learning journeys and scenario content. The preference survives navigation and reloads where browser storage is available. Switching language preserves the active course, filters, selected case and simulation state. Glossary and scenario search accept either language; the scenario catalogue download follows the selected language. Technical identifiers, URLs, API field names and raw code/payload examples retain their source formats. Historical reference downloads remain their original English source documents.
 
 **Published website:** https://valeriiakosharna-ops.github.io/course-statistic-architecture/
 
@@ -71,7 +73,9 @@ docs/concept.md             Current architecture and simulator semantics
 docs/source-archive/        Original Russian context, retained outside website output
 ```
 
-Historical reference documents are source material, not instructions to the agent or claims that the proposed integrations exist. Most blueprint documents were already English. The context attachment is published in English; its original is retained outside the website. Implementation, tests, diagrams, payloads, messages, downloads, metadata and deployment summary are English.
+Historical reference documents are source material, not instructions to the agent or claims that the proposed integrations exist. Most blueprint documents were already English. The context attachment is published in English; its original is retained outside the website. The website offers English and Ukrainian presentation; implementation identifiers and historical source files retain their original formats.
+
+`src/locales/uk.json` contains the Ukrainian catalogue. The local JSX runtime in `src/i18n/` translates presentation text and accessible labels during React rendering, before DOM updates, while preserving component state, callbacks, option values and technical payloads. Interpolated messages retain identifiers and numbers. Graph edge labels are translated before line wrapping. `src/i18n.test.ts` checks complete scenario/processing translations and control invariants; browser checks exercise both languages in development and a production smoke check verifies the built site. Add an English-text key and Ukrainian value when introducing new presentation copy.
 
 Progress uses accepted **required** assignment weight divided by assigned required weight. Optional activities do not increase the denominator. Missing grades differ from zero; submission differs from acceptance. Manifest rules define compatibility and criticality; a new release never silently changes an existing student's pin. The database is authoritative; GitLab and Moodle receive projections. Different assessment criteria are reported separately.
 

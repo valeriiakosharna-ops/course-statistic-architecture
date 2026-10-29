@@ -142,3 +142,9 @@ The separate `#scenarios` chapter collects 64 real-world learning situations acr
 Cases describe an initial agreement, an event and the resulting situation. They offer an open policy question, two possible choices and the facts needed for discussion. Choices are illustrative alternatives, not approved rules, automated decisions or claims of architecture support. The catalogue is a starting set; combinations are not exhaustively enumerated.
 
 The page includes a four-cell version/track change map, learning-stage filters, group/dimension/type filters, multiword search, related combinations, stable `#scenarios/<case-id>` links and a complete English Markdown download. No learner records, course versions, tracks, grades or simulations change while exploring it. This catalogue can inform a later review of how well the proposed architecture handles each situation.
+
+## Site languages
+
+All eight chapters support English and Ukrainian through the header language switch. This includes navigation, glossary definitions, diagrams, metrics and formulas, version/track decisions, learning-journey events and per-transfer processing descriptions, all 64 discovery cases and accessible control labels. The browser remembers the choice when storage is available; a blocked storage API falls back to a session-only choice. The document language and browser title follow the selection.
+
+Language changes rerender presentation without resetting learner records, course selection, filters, scenario selection or simulation progress. Search recognizes English and Ukrainian text using stable source IDs, and the scenario Markdown export uses the selected language. API identifiers, filenames, source-format payloads and historical English source downloads retain their original meaning and syntax. Local Cyrillic font subsets avoid external font or translation requests.

@@ -5,6 +5,8 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
+    "jsxImportSource": "@learningatlas/i18n",
+    "paths": { "@learningatlas/i18n/*": ["./src/i18n/*"] },
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true,
