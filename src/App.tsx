@@ -7,6 +7,7 @@ import {
   Database,
   GitBranch,
   Layers,
+  ListTree,
   Menu,
   Network,
   Workflow,
@@ -22,6 +23,7 @@ import Versions from "./pages/Versions";
 import Statistics from "./pages/Statistics";
 import Roadmap from "./pages/Roadmap";
 import Simulation from "./pages/Simulation";
+import Scenarios from "./pages/Scenarios";
 import { newRun, type SimulationCourse } from "./simulation";
 const pages = [
   {
@@ -66,11 +68,16 @@ const pages = [
     sub: "Triggers and data in motion",
     icon: Workflow,
   },
+  {
+    id: "scenarios",
+    title: "Real-world scenarios",
+    sub: "Situations before solutions",
+    icon: ListTree,
+  },
 ];
 const legacy: Record<string, string> = {
   overview: "concepts",
   glossary: "concepts",
-  scenarios: "ecosystems",
   roadmap: "mvp",
   decisions: "concepts",
 };
@@ -198,39 +205,49 @@ export default function App() {
             <span className="crumb"> Concept / </span>
             <strong>{pages[index].title}</strong>
           </div>
-          <label>
-            {" "}
-            Course type{" "}
-            <select
-              aria-label="Course type"
-              value={mode}
-              onChange={(e) => {
-                setMode(e.target.value as CourseMode);
-                if (route.page === "simulation")
-                  location.hash = `#simulation/${e.target.value}`;
-              }}
-            >
-              {modes
-                .filter(
-                  (m) =>
-                    route.page !== "simulation" ||
-                    m.id === "ai" ||
-                    m.id === "java",
-                )
-                .map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.label}
-                  </option>
-                ))}
-            </select>
-          </label>
+          {route.page === "scenarios" ? (
+            <span className="scenario-course-scope">All course types</span>
+          ) : (
+            <label>
+              {" "}
+              Course type{" "}
+              <select
+                aria-label="Course type"
+                value={mode}
+                onChange={(e) => {
+                  setMode(e.target.value as CourseMode);
+                  if (route.page === "simulation")
+                    location.hash = `#simulation/${e.target.value}`;
+                }}
+              >
+                {modes
+                  .filter(
+                    (m) =>
+                      route.page !== "simulation" ||
+                      m.id === "ai" ||
+                      m.id === "java",
+                  )
+                  .map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.label}
+                    </option>
+                  ))}
+              </select>
+            </label>
+          )}
         </header>
         <main id="main-content" tabIndex={-1}>
           <div className="model-banner">
-            <span> Architecture concept · DEMO </span>
+            <span>
+              {route.page === "scenarios"
+                ? "Real-world scenarios · DISCOVERY"
+                : "Architecture concept · DEMO"}
+            </span>
             <small>
               {" "}
-              No live connections. All examples use synthetic data.{" "}
+              {route.page === "scenarios"
+                ? "Open questions to explore before choosing a solution."
+                : "No live connections. All examples use synthetic data."}{" "}
             </small>
           </div>
           <div key={`${route.page}-${mode}`}>
@@ -256,6 +273,7 @@ export default function App() {
               />
             )}
             {route.page === "mvp" && <Roadmap />}
+            {route.page === "scenarios" && <Scenarios detail={route.detail} />}
             {route.page === "simulation" && (
               <Simulation
                 course={mode === "java" ? "java" : "ai"}

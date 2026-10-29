@@ -8,6 +8,7 @@ const sections = [
   "statistics",
   "mvp",
   "simulation",
+  "scenarios",
 ];
 test("all visual chapters load without browser errors or page overflow", async ({
   page,
